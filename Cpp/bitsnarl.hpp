@@ -50,17 +50,17 @@ struct is_array_of_uint8 {
 };
 
 template <>
-struct is_array_of_uint8<std::vector<std::uint8_t>> {
+struct is_array_of_uint8<std::vector<std::uint8_t> > {
     enum { value = true };
 };
 
 template <>
-struct is_array_of_uint8<std::valarray<std::uint8_t>> {
+struct is_array_of_uint8<std::valarray<std::uint8_t> > {
     enum { value = true };
 };
 
 template <std::size_t N>
-struct is_array_of_uint8<std::array<std::uint8_t, N>> {
+struct is_array_of_uint8<std::array<std::uint8_t, N> > {
     enum { value = true };
 };
 
@@ -121,4 +121,3 @@ void un_scramble(T &bytes) {
 }
 
 }
-
