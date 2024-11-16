@@ -1,3 +1,4 @@
+#include <iostream>
 #include <cstddef>
 #include <cstring>
 #include "bitsnarl.hpp"
@@ -67,8 +68,129 @@ void test_scramble_error_spread() {
     printf("Probability of getting same bytes at random: 1/256=%f\n", 1.0/256.0);
 }
 
+void test_scramble_and_unscramble() {
+    std::valarray<std::uint8_t> data = {1, 2, 3, 4, 5, 6, 7, 8};
+
+    std::cout << "Original" << std::endl;
+    for(auto& e : data) {
+        std::cout << (int)e << " ";
+    }
+    std::cout << std::endl;
+
+    bitsn::scramble(data);
+    std::cout << "Scrambled" << std::endl;
+    for(auto& e : data) {
+        std::cout << (int)e << " ";
+    }
+    std::cout << std::endl;
+
+    bitsn::un_scramble(data);
+    std::cout << "Un-Scrambled" << std::endl;
+    for(auto& e : data) {
+        std::cout << (int)e << " ";
+    }
+    std::cout << std::endl;
+}
+
+void test_scramble_and_unscramble2() {
+    std::valarray<std::uint8_t> data = {4, 1, 5, 12, 2, 5, 19, 80};
+
+    std::cout << "Original" << std::endl;
+    for(auto& e : data) {
+        std::cout << (int)e << " ";
+    }
+    std::cout << std::endl;
+
+    bitsn::scramble(data);
+    std::cout << "Scrambled" << std::endl;
+    for(auto& e : data) {
+        std::cout << (int)e << " ";
+    }
+    std::cout << std::endl;
+
+    bitsn::un_scramble(data);
+    std::cout << "Un-Scrambled" << std::endl;
+    for(auto& e : data) {
+        std::cout << (int)e << " ";
+    }
+    std::cout << std::endl;
+}
+
+void test_scramble_and_unscramble_string() {
+    std::string data = "This is a test";
+    std::array<std::uint8_t, 16> bytes;
+
+    for (int i = 0; i < 16; i++) {
+        bytes[i] = data[i];
+    }
+
+    std::cout << "Original text: " << data << std::endl;
+
+    std::cout << "Original bytes: ";
+    for (int i = 0; i < 16; i++) {
+        std::cout << (int)bytes[i] << " ";
+    }
+    std::cout << std::endl;
+
+    bitsn::scramble(bytes);
+
+    std::cout << "Scrambled bytes: ";
+    for (int i = 0; i < 16; i++) {
+        std::cout << (int)bytes[i] << " ";
+    }
+    std::cout << std::endl;
+
+    std::string scrambled_data(bytes.begin(), bytes.end());
+    std::cout << "Scrambled text: " << scrambled_data << std::endl;
+
+    bitsn::un_scramble(bytes);
+
+    std::string unscrambled_data(bytes.begin(), bytes.end());
+
+    std::cout << "Un-scrambled bytes: " << unscrambled_data << std::endl;
+}
+
+void test_scramble_and_unscramble_with_errors() {
+    std::valarray<std::uint8_t> data = {200, 100, 50, 25, 12, 6, 3, 1};
+
+    std::cout << "Original" << std::endl;
+    for(auto& e : data) {
+        std::cout << (int)e << " ";
+    }
+    std::cout << std::endl;
+
+    bitsn::scramble(data);
+    std::cout << "Scrambled" << std::endl;
+    for(auto& e : data) {
+        std::cout << (int)e << " ";
+    }
+    std::cout << std::endl;
+
+    bitsn::un_scramble(data);
+    std::cout << "Un-Scrambled" << std::endl;
+    for(auto& e : data) {
+        std::cout << (int)e << " ";
+    }
+    std::cout << std::endl;
+
+    bitsn::scramble(data);
+    data[0] += 1;
+    data[5] += 1;
+
+    bitsn::un_scramble(data);
+    std::cout << "Un-Scrambled with errors" << std::endl;
+    for(auto& e : data) {
+        std::cout << (int)e << " ";
+    }
+    std::cout << std::endl;
+}
+
 int main() {
     test_hadamard();
     test_scramble_identity();
     test_scramble_error_spread();
+    test_scramble_and_unscramble();
+    test_scramble_and_unscramble2();
+    test_scramble_and_unscramble_with_errors();
+    test_scramble_and_unscramble_string();
 }
