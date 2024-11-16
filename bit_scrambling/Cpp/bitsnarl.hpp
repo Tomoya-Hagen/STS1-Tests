@@ -6,7 +6,7 @@
 
 namespace bitsn {
 
-static const std::uint8_t GF_table[256] = {
+static const std::uint8_t GF_table[256] = { //index (i) of an element (with value v) is the value of the v-th element in the inverse matrix
     0,   2,   4,   8,  16,  32,  64, 128,  29,  58, 116, 232, 205, 135,  19,  38,
    76, 152,  45,  90, 180, 117, 234, 201, 143,   3,   6,  12,  24,  48,  96, 192,
   157,  39,  78, 156,  37,  74, 148,  53, 106, 212, 181, 119, 238, 193, 159,  35,
@@ -50,17 +50,17 @@ struct is_array_of_uint8 {
 };
 
 template <>
-struct is_array_of_uint8<std::vector<std::uint8_t> > {
+struct is_array_of_uint8<std::vector<std::uint8_t>> {
     enum { value = true };
 };
 
 template <>
-struct is_array_of_uint8<std::valarray<std::uint8_t> > {
+struct is_array_of_uint8<std::valarray<std::uint8_t>> {
     enum { value = true };
 };
 
 template <std::size_t N>
-struct is_array_of_uint8<std::array<std::uint8_t, N> > {
+struct is_array_of_uint8<std::array<std::uint8_t, N>> {
     enum { value = true };
 };
 
