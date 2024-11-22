@@ -28,7 +28,7 @@ int HammingDistance(const std::string& x, const std::string& y) {
 
 std::ostream& operator <<(std::ostream& os, const ViterbiCodec& codec) {
   os << "ViterbiCodec(" << codec.constraint() << ", {";
-  const std::vector<int>& polynomials = codec.polynomials();
+  const std::array<int, 2>& polynomials = codec.polynomials();
   assert(!polynomials.empty());
   os << polynomials.front();
   for (int i = 1; i < polynomials.size(); i++) {
@@ -47,8 +47,7 @@ int ReverseBits(int num_bits, int input) {
   return output;
 }
 
-ViterbiCodec::ViterbiCodec(int constraint, const std::vector<int>& polynomials)
-    : constraint_(constraint), polynomials_(polynomials) {
+ViterbiCodec::ViterbiCodec() {
   assert(!polynomials_.empty());
   for (int i = 0; i < polynomials_.size(); i++) {
     assert(polynomials_[i] > 0);
@@ -94,7 +93,6 @@ std::string ViterbiCodec::Encode(const std::string& bits) const {
   // Encode (constaint_ - 1) flushing bits.
   for (int i = 0; i < constraint_ - 1; i++) {
     std::string output = Output(state, 0);
-    puncture_index = 0;
     for (int j = 0; j < output.size(); j++) {
       if (puncturing_pattern[puncture_index % 3]) {
         encoded += output[j];
@@ -182,6 +180,7 @@ std::string ViterbiCodec::Decode(const std::string& bits) const {
                                 std::numeric_limits<int>::max());
   path_metrics.front() = 0;
   int puncture_index = 0;
+
   for (int i = 0; i < bits.size(); i += num_parity_bits()) {
     std::string current_bits(bits, i, num_parity_bits());
     // If some bits are missing, fill with trailing zeros.
@@ -190,6 +189,17 @@ std::string ViterbiCodec::Decode(const std::string& bits) const {
       current_bits.append(
           std::string(num_parity_bits() - current_bits.size(), '0'));
     }
+
+    std::string processed_bits;
+    for (int j = 0; j < current_bits.size(); j++) {
+        if (puncturing_pattern[puncture_index % 3]) {
+            processed_bits += current_bits[j];  // Transmit the bit
+        } else {
+            processed_bits += '0';  // Assume punctured bit is zero
+        }
+        puncture_index++;
+    }
+
     UpdatePathMetrics(current_bits, &path_metrics, &trellis);
   }
 

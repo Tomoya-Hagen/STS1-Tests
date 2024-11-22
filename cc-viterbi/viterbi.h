@@ -32,15 +32,15 @@ class ViterbiCodec {
   //    This representation is used by the Spiral Viterbi Decoder Software
   //    Generator. See http://www.spiral.net/software/viterbi.html
   // We use 2.
-  ViterbiCodec(int constraint, const std::vector<int>& polynomials);
+  ViterbiCodec();
 
   std::string Encode(const std::string& bits) const;
 
   std::string Decode(const std::string& bits) const;
 
-  int constraint() const { return constraint_; }
+  int constraint() const { return 7; }
 
-  const std::vector<int>& polynomials() const { return polynomials_; }
+  const std::array<int, 2>& polynomials() const { return polynomials_; }
 
  private:
   // Suppose
@@ -76,8 +76,8 @@ class ViterbiCodec {
                          std::vector<int>* path_metrics,
                          Trellis* trellis) const;
 
-  const int constraint_;
-  const std::vector<int> polynomials_;
+  const int constraint_ = 7;
+  const std::array<int, 2> polynomials_ = {0b1111001, 0b1011011};
 
   // The output table.
   // The index is current input bit combined with previous inputs in the shift
@@ -87,7 +87,7 @@ class ViterbiCodec {
   // 6).
   std::vector<std::string> outputs_;
 
-  std::array<bool, 3> const puncturing_pattern = {1, 0, 1};
+  const std::array<bool, 3> puncturing_pattern = {1, 0, 1};
 };
 
 std::ostream& operator <<(std::ostream& os, const ViterbiCodec& codec);
