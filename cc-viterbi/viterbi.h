@@ -12,8 +12,9 @@
 #include <vector>
 
 // This class implements both a Viterbi Decoder and a Convolutional Encoder.
-class ViterbiCodec {
- public:
+class ViterbiCodec
+{
+public:
   // Note about Polynomial Descriptor of a Convolutional Encoder / Decoder.
   // A generator polymonial is built as follows: Build a binary number
   // representation by placing a 1 in each spot where a connection line from
@@ -34,15 +35,15 @@ class ViterbiCodec {
   // We use 2.
   ViterbiCodec();
 
-  std::string Encode(const std::string& bits) const;
+  std::string Encode(const std::string &bits) const;
 
-  std::string Decode(const std::string& bits) const;
+  std::string Decode(const std::string &bits) const;
 
   int constraint() const { return 7; }
 
-  const std::array<int, 2>& polynomials() const { return polynomials_; }
+  const std::array<int, 2> &polynomials() const { return polynomials_; }
 
- private:
+private:
   // Suppose
   //
   //     Trellis trellis;
@@ -50,7 +51,7 @@ class ViterbiCodec {
   // Then trellis[i][s] is the state in the (i - 1)th iteration which leads to
   // the current state s in the ith iteration.
   // It is used for traceback.
-  typedef std::vector<std::vector<int> > Trellis;
+  typedef std::vector<std::vector<int>> Trellis;
 
   int num_parity_bits() const;
 
@@ -60,21 +61,21 @@ class ViterbiCodec {
 
   std::string Output(int current_state, int input) const;
 
-  int BranchMetric(const std::string& bits,
+  int BranchMetric(const std::string &bits,
                    int source_state,
                    int target_state) const;
 
   // Given num_parity_bits() received bits, compute and returns path
   // metric and its corresponding previous state.
-  std::pair<int, int> PathMetric(const std::string& bits,
-                                 const std::vector<int>& prev_path_metrics,
+  std::pair<int, int> PathMetric(const std::string &bits,
+                                 const std::vector<int> &prev_path_metrics,
                                  int state) const;
 
   // Given num_parity_bits() received bits, update path metrics of all states
   // in the current iteration, and append new traceback vector to trellis.
-  void UpdatePathMetrics(const std::string& bits,
-                         std::vector<int>* path_metrics,
-                         Trellis* trellis) const;
+  void UpdatePathMetrics(const std::string &bits,
+                         std::vector<int> *path_metrics,
+                         Trellis *trellis) const;
 
   const int constraint_ = 7;
   const std::array<int, 2> polynomials_ = {0b1111001, 0b1011011};
@@ -90,8 +91,8 @@ class ViterbiCodec {
   const std::array<bool, 3> puncturing_pattern = {1, 0, 1};
 };
 
-std::ostream& operator <<(std::ostream& os, const ViterbiCodec& codec);
+std::ostream &operator<<(std::ostream &os, const ViterbiCodec &codec);
 
 int ReverseBits(int num_bits, int input);
 
-#endif  // VITERBI_H_
+#endif // VITERBI_H_
