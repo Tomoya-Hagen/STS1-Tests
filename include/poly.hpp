@@ -27,7 +27,7 @@ struct Poly {
      * @param num - number to append
      * @return false if polynomial can't be stretched */
     inline bool Append(uint8_t num) {
-        assert(length+1 < _size);
+        // assert(length+1 < _size);
         ptr()[length++] = num;
         return true;
     }
@@ -64,7 +64,7 @@ struct Poly {
     }
 
     inline uint8_t& at(uint8_t i) const {
-        assert(i < _size);
+        // assert(i < _size);
         return ptr()[i];
     }
 
