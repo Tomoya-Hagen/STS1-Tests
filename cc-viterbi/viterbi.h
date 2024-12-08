@@ -51,7 +51,7 @@ private:
   // Then trellis[i][s] is the state in the (i - 1)th iteration which leads to
   // the current state s in the ith iteration.
   // It is used for traceback.
-  typedef std::vector<std::vector<int>> Trellis;
+  typedef std::vector<std::array<int, 64>> Trellis;
 
   int num_parity_bits() const;
 
@@ -68,13 +68,13 @@ private:
   // Given num_parity_bits() received bits, compute and returns path
   // metric and its corresponding previous state.
   std::pair<int, int> PathMetric(const std::string &bits,
-                                 const std::vector<int> &prev_path_metrics,
+                                 const std::array<int, 64> &prev_path_metrics,
                                  int state) const;
 
   // Given num_parity_bits() received bits, update path metrics of all states
   // in the current iteration, and append new traceback vector to trellis.
   void UpdatePathMetrics(const std::string &bits,
-                         std::vector<int> *path_metrics,
+                         std::array<int, 64> *path_metrics,
                          Trellis *trellis) const;
 
   const int constraint_ = 7;
@@ -86,13 +86,12 @@ private:
   // convenience, e.g. "10". For example, suppose the shift register contains
   // 0b10 (= 2), and the current input is 0b1 (= 1), then the index is 0b110 (=
   // 6).
-  std::vector<std::string> outputs_;
+  std::array<std::string, 1 << 7> outputs_;
 
-  const std::array<bool, 3> puncturing_pattern = {1, 0, 1};
+  const std::array<bool, 4> puncturing_pattern_ = {1, 1, 0, 1};
 };
 
 std::ostream &operator<<(std::ostream &os, const ViterbiCodec &codec);
 
-int ReverseBits(int num_bits, int input);
 
 #endif // VITERBI_H_
