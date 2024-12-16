@@ -51,8 +51,9 @@ struct Poly {
      * @param size   - size of polynomial
      * @param offset - write offset */
     inline void Set(const uint8_t* src, uint8_t len, uint8_t offset = 0) {
-        assert(src && len <= this->_size-offset);
-        memcpy(ptr()+offset, src, len * sizeof(uint8_t));
+        // assert(src && len <= this->_size-offset);
+        // memset(ptr(), 0, this->_size * sizeof(uint8_t)); // virtual fill with zeros
+        memcpy(ptr() + offset, src, len * sizeof(uint8_t));
         length = len + offset;
     }
 
