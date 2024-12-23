@@ -8,7 +8,9 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <format>
 #include <limits>
+#include <span>
 #include <string>
 #include <utility>
 #include <vector>
@@ -16,13 +18,16 @@
 namespace
 {
 
-  int HammingDistance(const std::string &x, const std::string &y)
+  int HammingDistance(const uint8_t &x, const uint8_t &y)
   {
-    assert(x.size() == y.size());
     int distance = 0;
-    for (int i = 0; i < x.size(); i++)
+    int x_copy = x;
+    int y_copy = y;
+    while (x_copy && y_copy)
     {
-      distance += x[i] != y[i];
+      distance += (x_copy & 1) != (y_copy & 1);
+      x_copy >>= 1;
+      y_copy >>= 1;
     }
     return distance;
   }
@@ -63,48 +68,63 @@ int ViterbiCodec::NextState(int current_state, int input) const
   return (current_state >> 1) | (input << (constraint_ - 2));
 }
 
-std::string ViterbiCodec::Output(int current_state, int input) const
+uint8_t ViterbiCodec::Output(int current_state, int input) const
 {
   return outputs_.at(current_state | (input << (constraint_ - 1)));
 }
 
-std::string ViterbiCodec::Encode(const std::string &bits) const
+std::vector<uint8_t> ViterbiCodec::Encode(std::span<uint8_t> src) const
 {
-  std::string encoded;
+  std::cout << "input: ";
+  for (auto byte : src)
+  {
+    std::cout << std::format("{:08b} ", byte);
+  }
+  std::cout << std::endl;
+  std::vector<uint8_t> dst;
+  dst.reserve(src.size() + constraint_ - 1);
   int state = 0;
   // Encode the message bits.
-  for (int i = 0; i < bits.size(); i++)
+  for (int i = 0; i < src.size(); i++)
   {
-    char c = bits[i];
-    assert(c == '0' || c == '1');
-    int input = c - '0';
+    int input = src[i];
 
-    encoded += Output(state, input);
+    dst.push_back(Output(state, input));
     state = NextState(state, input);
   }
-  std::cout << "input: " << bits << std::endl;
-  std::cout << "code: " << encoded << std::endl;
+  std::cout << "code: ";
+  for (int i = 0; i < dst.size(); i++)
+  {
+    std::cout << dst[i];
+  }
+  std::cout << std::endl;
+
   // Encode (constaint_ - 1) flushing bits.
   for (int i = 0; i < constraint_ - 1; i++)
   {
-    encoded += Output(state, 0);
+    dst.push_back(Output(state, 0));
     state = NextState(state, 0);
   }
-  std::cout << "bits after flushing: " << encoded << std::endl;
+  std::cout << "bits after flushing: ";
+  for (int i = 0; i < dst.size(); i++)
+  {
+    std::cout << dst[i];
+  }
 
-  std::string punctured;
   int puncturing_index = 0;
+  std::vector<uint8_t> punctured_dst;
+  punctured_dst.reserve(dst.size());
 
-  for (int i = 0; i < encoded.size(); i++)
+  for (int i = 0; i < dst.size(); i++)
   {
     if (puncturing_pattern_[puncturing_index % 4])
     {
-      punctured += encoded[i];
+      punctured_dst.push_back(dst[i]);
     }
     puncturing_index++;
   }
-  std::cout << "punctured: " << punctured << std::endl;
-  return punctured;
+  // std::cout << "after puncturing: " << dst << std::endl;
+  return dst;
 }
 
 void ViterbiCodec::InitializeOutputs()
@@ -124,7 +144,7 @@ void ViterbiCodec::InitializeOutputs()
         polynomial >>= 1;
         input >>= 1;
       }
-      outputs_[i] += output ? "1" : "0";
+      outputs_[i] += output ? 1 : 0;
     }
   }
 }
@@ -139,10 +159,17 @@ int ViterbiCodec::BranchMetric(const std::string &bits,
   // that the lower bits of the target_state should match the upper bits of the source_state
   // after being shifted right by one position.
   assert((target_state & ((1 << (constraint_ - 2)) - 1)) == source_state >> 1);
-  const std::string output =
+  const uint8_t output =
       Output(source_state, target_state >> (constraint_ - 2));
 
-  return HammingDistance(bits, output); // how well does the expected output from that transition match the actual received bits?
+  int bit_sequence = 0;
+  for (int i = 0; i < bits.size(); i++)
+  {
+    bit_sequence <<= 1;
+    bit_sequence |= (bits[i] - '0');
+  }
+
+  return HammingDistance(bit_sequence, output); // how well does the expected output from that transition match the actual received bits?
 }
 
 std::pair<int, int> ViterbiCodec::PathMetric(

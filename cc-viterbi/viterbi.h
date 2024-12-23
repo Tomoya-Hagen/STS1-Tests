@@ -7,6 +7,7 @@
 #define VITERBI_H_
 
 #include <ostream>
+#include <span>
 #include <string>
 #include <utility>
 #include <vector>
@@ -35,7 +36,7 @@ public:
   // We use 2.
   ViterbiCodec();
 
-  std::string Encode(const std::string &bits) const;
+  std::vector<uint8_t> Encode(std::span<uint8_t> src) const;
 
   std::string Decode(const std::string &bits) const;
 
@@ -59,7 +60,7 @@ private:
 
   int NextState(int current_state, int input) const;
 
-  std::string Output(int current_state, int input) const;
+  uint8_t Output(int current_state, int input) const;
 
   int BranchMetric(const std::string &bits,
                    int source_state,
@@ -77,7 +78,7 @@ private:
                          std::array<int, 64> *path_metrics,
                          Trellis *trellis) const;
 
-  const int constraint_ = 7;
+  static constexpr int constraint_ = 7;
   const std::array<int, 2> polynomials_ = {0b1111001, 0b1011011};
 
   // The output table.
@@ -86,12 +87,13 @@ private:
   // convenience, e.g. "10". For example, suppose the shift register contains
   // 0b10 (= 2), and the current input is 0b1 (= 1), then the index is 0b110 (=
   // 6).
-  std::array<std::string, 1 << 7> outputs_;
+  public:
+
+  std::array<uint8_t, 1 << constraint_> outputs_;
 
   const std::array<bool, 4> puncturing_pattern_ = {1, 1, 0, 1};
 };
 
 std::ostream &operator<<(std::ostream &os, const ViterbiCodec &codec);
-
 
 #endif // VITERBI_H_

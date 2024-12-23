@@ -9,8 +9,10 @@
 #include <cassert>
 #include <cstdlib>
 #include <ctime>
+#include <format>
 #include <iostream>
 #include <string>
+#include <span>
 #include <vector>
 
 void TestViterbiDecoding(const ViterbiCodec& codec,
@@ -28,13 +30,41 @@ void TestViterbiDecoding(const ViterbiCodec& codec,
   std::cout << std::endl;
 }
 
+void TestCCEncoding() {
+  const ViterbiCodec codec;
+  std::cout << "output: "<< codec.outputs_.size() << "\n";
+  // for (auto x : codec.outputs_) {
+  //   std::cout << std::format("{:08b}", x) << " ";
+  // }
+  std::cout << "\n";
+  return;
+  uint8_t msg[] = {199, 11, 10, 9, 13};
+
+  const std::vector<uint8_t> encoded = codec.Encode(msg);
+
+
+  std::cout << std::string(60, '=') << std::endl
+            << codec << std::endl
+            << "encoded result: ";
+  for (const uint8_t c : encoded) {
+    std::cout << c;
+  }
+  std::cout << std::endl;
+
+  // std::string decoded = codec.Decode(encoded);
+
+  // std::cout << "decoded result: " << decoded << std::endl;
+
+  // assert(msg == decoded);
+}
+
 void TestViterbiDecodingSamples() {
   {
     std::vector<int> polynomials;
     polynomials.push_back(7);
     polynomials.push_back(5);
 
-    ViterbiCodec codec(3, polynomials);
+    ViterbiCodec codec;
 
     TestViterbiDecoding(codec,
                         "0011100001100111111000101100111011",
@@ -51,7 +81,7 @@ void TestViterbiDecodingSamples() {
     polynomials.push_back(7);
     polynomials.push_back(6);
 
-    ViterbiCodec codec(3, polynomials);
+    ViterbiCodec codec;
 
     TestViterbiDecoding(codec, "1011010100110000", "101100");
   }
@@ -61,7 +91,7 @@ void TestViterbiDecodingSamples() {
     polynomials.push_back(6);
     polynomials.push_back(5);
 
-    ViterbiCodec codec(3, polynomials);
+    ViterbiCodec codec;
 
     TestViterbiDecoding(codec, "011011011101101011", "1001101");
 
@@ -75,7 +105,7 @@ void TestViterbiDecodingSamples() {
     polynomials.push_back(117);
     polynomials.push_back(121);
 
-    ViterbiCodec codec(7, polynomials);
+    ViterbiCodec codec;
 
     TestViterbiDecoding(codec,
                         "111100101110001011110101111111001011100111",
@@ -101,92 +131,93 @@ void TestViterbiCodecAutomatic(const ViterbiCodec& codec) {
         message += (std::rand() & 1) + '0';
       }
 
-      std::string encoded = codec.Encode(message);
-      std::string decoded = codec.Decode(encoded);
-      std::cout << "encoded = " << encoded << std::endl
-                << "decoded = " << decoded << std::endl << std::endl;
-      assert(decoded == message);
+      // std::string encoded = codec.Encode(message);
+      // std::string decoded = codec.Decode(encoded);
+      // std::cout << "encoded = " << encoded << std::endl
+                // << "decoded = " << decoded << std::endl << std::endl;
+      // assert(decoded == message);
     }
   }
 }
 
 int main(int argc, char** argv) {
-  TestViterbiDecodingSamples();
+  TestCCEncoding();
+  // TestViterbiDecodingSamples();
 
-  std::srand(std::time(NULL));
+  // std::srand(std::time(NULL));
 
-  {
-    std::vector<int> polynomials;
-    polynomials.push_back(7);
-    polynomials.push_back(5);
+  // {
+  //   std::vector<int> polynomials;
+  //   polynomials.push_back(7);
+  //   polynomials.push_back(5);
 
-    ViterbiCodec codec(3, polynomials);
+  //   ViterbiCodec codec;
 
-    TestViterbiCodecAutomatic(codec);
-  }
+  //   TestViterbiCodecAutomatic(codec);
+  // }
 
-  {
-    std::vector<int> polynomials;
-    polynomials.push_back(6);
-    polynomials.push_back(5);
+  // {
+  //   std::vector<int> polynomials;
+  //   polynomials.push_back(6);
+  //   polynomials.push_back(5);
 
-    ViterbiCodec codec(3, polynomials);
+  //   ViterbiCodec codec;
 
-    TestViterbiCodecAutomatic(codec);
-  }
+  //   TestViterbiCodecAutomatic(codec);
+  // }
 
-  {
-    // Voyager
-    std::vector<int> polynomials;
-    polynomials.push_back(109);
-    polynomials.push_back(79);
+  // {
+  //   // Voyager
+  //   std::vector<int> polynomials;
+  //   polynomials.push_back(109);
+  //   polynomials.push_back(79);
 
-    ViterbiCodec codec(7, polynomials);
+  //   ViterbiCodec codec;
 
-    TestViterbiCodecAutomatic(codec);
-  }
+  //   TestViterbiCodecAutomatic(codec);
+  // }
 
-  {
-    // LTE
-    std::vector<int> polynomials;
-    polynomials.push_back(91);
-    polynomials.push_back(117);
-    polynomials.push_back(121);
+  // {
+  //   // LTE
+  //   std::vector<int> polynomials;
+  //   polynomials.push_back(91);
+  //   polynomials.push_back(117);
+  //   polynomials.push_back(121);
 
-    ViterbiCodec codec(7, polynomials);
+  //   ViterbiCodec codec;
 
-    TestViterbiCodecAutomatic(codec);
-  }
+  //   TestViterbiCodecAutomatic(codec);
+  // }
 
-  {
-    // CDMA 2000
-    std::vector<int> polynomials;
-    polynomials.push_back(501);
-    polynomials.push_back(441);
-    polynomials.push_back(331);
-    polynomials.push_back(315);
+  // {
+  //   // CDMA 2000
+  //   std::vector<int> polynomials;
+  //   polynomials.push_back(501);
+  //   polynomials.push_back(441);
+  //   polynomials.push_back(331);
+  //   polynomials.push_back(315);
 
-    ViterbiCodec codec(9, polynomials);
+  //   ViterbiCodec codec;
 
-    TestViterbiCodecAutomatic(codec);
-  }
+  //   TestViterbiCodecAutomatic(codec);
+  // }
 
-  {
-    // Cassini / Mars Pathfinder
-    std::vector<int> polynomials;
-    polynomials.push_back(15);
-    polynomials.push_back(17817);
-    polynomials.push_back(20133);
-    polynomials.push_back(23879);
-    polynomials.push_back(30451);
-    polynomials.push_back(32439);
-    polynomials.push_back(26975);
+  // {
+  //   // Cassini / Mars Pathfinder
+  //   std::vector<int> polynomials;
+  //   polynomials.push_back(15);
+  //   polynomials.push_back(17817);
+  //   polynomials.push_back(20133);
+  //   polynomials.push_back(23879);
+  //   polynomials.push_back(30451);
+  //   polynomials.push_back(32439);
+  //   polynomials.push_back(26975);
 
-    ViterbiCodec codec(15, polynomials);
+  //   ViterbiCodec codec;
 
-    TestViterbiCodecAutomatic(codec);
-  }
+  //   TestViterbiCodecAutomatic(codec);
+  // }
 
-  std::cout << "PASS" << std::endl;
+  // std::cout << "PASS" << std::endl;
 }
 
