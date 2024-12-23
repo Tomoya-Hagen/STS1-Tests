@@ -1,3 +1,10 @@
+.vscode/
+**/build/
+*.m
+*.py
+*.o
 *.out
 *.gch
 ~*
+viterbi_test
+viterbi_main
