@@ -9,7 +9,9 @@
 #include <ostream>
 #include <string>
 #include <utility>
+#include <span>
 #include <vector>
+#include <cstdint>
 
 // This class implements both a Viterbi Decoder and a Convolutional Encoder.
 class ViterbiCodec {
@@ -34,9 +36,9 @@ class ViterbiCodec {
   // We use 2.
   ViterbiCodec(int constraint, const std::vector<int>& polynomials);
 
-  std::string Encode(const std::string& bits) const;
+  std::vector<std::uint8_t> Encode(std::span<std::uint8_t> bits) const;
 
-  std::string Decode(const std::string& bits) const;
+  std::string Decode(const std::string &bits) const;
 
   int constraint() const { return constraint_; }
 
@@ -58,7 +60,7 @@ class ViterbiCodec {
 
   int NextState(int current_state, int input) const;
 
-  std::string Output(int current_state, int input) const;
+  std::uint8_t Output(int current_state, int input) const;
 
   int BranchMetric(const std::string& bits,
                    int source_state,
@@ -85,7 +87,9 @@ class ViterbiCodec {
   // convenience, e.g. "10". For example, suppose the shift register contains
   // 0b10 (= 2), and the current input is 0b1 (= 1), then the index is 0b110 (=
   // 6).
-  std::vector<std::string> outputs_;
+  public:
+
+  std::vector<std::uint8_t> outputs_;
 };
 
 std::ostream& operator <<(std::ostream& os, const ViterbiCodec& codec);

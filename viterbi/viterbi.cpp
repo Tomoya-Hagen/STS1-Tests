@@ -9,9 +9,12 @@
 #include <cassert>
 #include <iostream>
 #include <limits>
+#include <span>
+#include <format>
 #include <string>
 #include <utility>
 #include <vector>
+#include <cstdint>
 
 namespace {
 
@@ -65,26 +68,26 @@ int ViterbiCodec::NextState(int current_state, int input) const {
   return (current_state >> 1) | (input << (constraint_ - 2));
 }
 
-std::string ViterbiCodec::Output(int current_state, int input) const {
+std::uint8_t ViterbiCodec::Output(int current_state, int input) const {
   return outputs_.at(current_state | (input << (constraint_ - 1)));
 }
 
-std::string ViterbiCodec::Encode(const std::string& bits) const {
-  std::string encoded;
+std::vector<std::uint8_t> ViterbiCodec::Encode(std::span<std::uint8_t> message) const {
+  std::vector<std::uint8_t> encoded;
   int state = 0;
 
-  // Encode the message bits.
-  for (int i = 0; i < bits.size(); i++) {
-    char c = bits[i];
-    assert(c == '0' || c == '1');
-    int input = c - '0';
-    encoded += Output(state, input);
-    state = NextState(state, input);
+  for (int i = 0; i < message.size(); i++) {
+    for (int j = 0; j < 8; j++) {
+      auto bit = (message[i] >> j) & 1;
+      assert(bit == 0 || bit == 1);
+      encoded.push_back(Output(state, bit));
+      state = NextState(state, bit);
+    }
   }
 
   // Encode (constaint_ - 1) flushing bits.
   for (int i = 0; i < constraint_ - 1; i++) {
-    encoded += Output(state, 0);
+    encoded.push_back(Output(state, 0));
     state = NextState(state, 0);
   }
 
@@ -104,7 +107,7 @@ void ViterbiCodec::InitializeOutputs() {
         polynomial >>= 1;
         input >>= 1;
       }
-      outputs_[i] += output ? "1" : "0";
+      outputs_[i] = (outputs_[i] << 1) | output;
     }
   }
 }
@@ -114,10 +117,10 @@ int ViterbiCodec::BranchMetric(const std::string& bits,
                                int target_state) const {
   assert(bits.size() == num_parity_bits());
   assert((target_state & ((1 << (constraint_ - 2)) - 1)) == source_state >> 1);
-  const std::string output =
+  const auto output =
       Output(source_state, target_state >> (constraint_ - 2));
 
-  return HammingDistance(bits, output);
+  return HammingDistance(bits, std::format("{:02b}", output));
 }
 
 std::pair<int, int> ViterbiCodec::PathMetric(
@@ -159,7 +162,7 @@ void ViterbiCodec::UpdatePathMetrics(const std::string& bits,
   trellis->push_back(new_trellis_column);
 }
 
-std::string ViterbiCodec::Decode(const std::string& bits) const {
+std::string ViterbiCodec::Decode(const std::string &bits) const {
   // Compute path metrics and generate trellis.
   Trellis trellis;
   std::vector<int> path_metrics(1 << (constraint_ - 1),
