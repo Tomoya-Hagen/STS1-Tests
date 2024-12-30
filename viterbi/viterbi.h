@@ -34,15 +34,15 @@ class ViterbiCodec {
   //    This representation is used by the Spiral Viterbi Decoder Software
   //    Generator. See http://www.spiral.net/software/viterbi.html
   // We use 2.
-  ViterbiCodec(int constraint, const std::vector<int>& polynomials);
+  ViterbiCodec();
 
-  std::vector<std::uint8_t> Encode(std::span<std::uint8_t> bits) const;
+  void Encode(std::span<std::uint8_t> src, std::vector<std::uint8_t>& dst) const;
 
   std::string Decode(const std::string &bits) const;
 
   int constraint() const { return constraint_; }
 
-  const std::vector<int>& polynomials() const { return polynomials_; }
+  const std::array<int, 2>& polynomials() const { return polynomials_; }
 
  private:
   // Suppose
@@ -78,8 +78,8 @@ class ViterbiCodec {
                          std::vector<int>* path_metrics,
                          Trellis* trellis) const;
 
-  const int constraint_;
-  const std::vector<int> polynomials_;
+  static constexpr int constraint_ = 7;
+  const std::array<int, 2> polynomials_ = {0b1111001, 0b1011011};
 
   // The output table.
   // The index is current input bit combined with previous inputs in the shift
@@ -87,9 +87,9 @@ class ViterbiCodec {
   // convenience, e.g. "10". For example, suppose the shift register contains
   // 0b10 (= 2), and the current input is 0b1 (= 1), then the index is 0b110 (=
   // 6).
-  public:
+  std::array<std::uint8_t, 1 << constraint_> outputs_;
 
-  std::vector<std::uint8_t> outputs_;
+  const std::array<bool, 4> puncturing_pattern_ = {1, 1, 1, 1};
 };
 
 std::ostream& operator <<(std::ostream& os, const ViterbiCodec& codec);

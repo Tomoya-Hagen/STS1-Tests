@@ -31,7 +31,7 @@ int HammingDistance(const std::string& x, const std::string& y) {
 
 std::ostream& operator <<(std::ostream& os, const ViterbiCodec& codec) {
   os << "ViterbiCodec(" << codec.constraint() << ", {";
-  const std::vector<int>& polynomials = codec.polynomials();
+  const std::array<int, 2>& polynomials = codec.polynomials();
   assert(!polynomials.empty());
   os << polynomials.front();
   for (int i = 1; i < polynomials.size(); i++) {
@@ -50,8 +50,8 @@ int ReverseBits(int num_bits, int input) {
   return output;
 }
 
-ViterbiCodec::ViterbiCodec(int constraint, const std::vector<int>& polynomials)
-    : constraint_(constraint), polynomials_(polynomials) {
+ViterbiCodec::ViterbiCodec()
+{
   assert(!polynomials_.empty());
   for (int i = 0; i < polynomials_.size(); i++) {
     assert(polynomials_[i] > 0);
@@ -72,34 +72,53 @@ std::uint8_t ViterbiCodec::Output(int current_state, int input) const {
   return outputs_.at(current_state | (input << (constraint_ - 1)));
 }
 
-std::vector<std::uint8_t> ViterbiCodec::Encode(std::span<std::uint8_t> message) const {
-  std::vector<std::uint8_t> encoded;
+void ViterbiCodec::Encode(std::span<std::uint8_t> src, std::vector<std::uint8_t>& dst) const {
   int state = 0;
 
-  for (int i = 0; i < message.size(); i++) {
-    for (int j = 0; j < 8; j++) {
-      auto bit = (message[i] >> j) & 1;
+  for (int i = 0; i < src.size(); i++) {
+    for (int j = 7; j >= 0; j--) {
+      auto bit = (src[i] >> j) & 1;
       assert(bit == 0 || bit == 1);
-      encoded.push_back(Output(state, bit));
+      dst.push_back(Output(state, bit));
       state = NextState(state, bit);
     }
   }
+  std::cout << "encoded first phase:  ";
+  for (int i = 0; i < dst.size(); i++) {
+    std::cout << std::format("{:02b}", dst[i]);
+  }
+  std::cout << std::endl;
 
   // Encode (constaint_ - 1) flushing bits.
   for (int i = 0; i < constraint_ - 1; i++) {
-    encoded.push_back(Output(state, 0));
+    dst.push_back(Output(state, 0));
     state = NextState(state, 0);
   }
 
-  return encoded;
+  std::cout << "encoded second phase: ";
+  for (int i = 0; i < dst.size(); i++) {
+    std::cout << std::format("{:02b}", dst[i]);
+  }
+  std::cout << std::endl;
+
+  // std::vector<std::uint8_t> punctured;
+
+  // for (int i = 0; i < dst.size(); i++) {
+  //   if (puncturing_pattern_[i % 4]) {
+  //     punctured.push_back(dst[i]);
+  //   }
+  // }
+
+  // dst = std::move(punctured);
 }
 
 void ViterbiCodec::InitializeOutputs() {
-  outputs_.resize(1 << constraint_);
   for (int i = 0; i < outputs_.size(); i++) {
+    outputs_[i] = 0;
     for (int j = 0; j < num_parity_bits(); j++) {
       // Reverse polynomial bits to make the convolution code simpler.
       int polynomial = ReverseBits(constraint_, polynomials_[j]);
+      // int polynomial = polynomials_[j];
       int input = i;
       int output = 0;
       for (int k = 0; k < constraint_; k++) {
@@ -107,7 +126,7 @@ void ViterbiCodec::InitializeOutputs() {
         polynomial >>= 1;
         input >>= 1;
       }
-      outputs_[i] = (outputs_[i] << 1) | output;
+      outputs_[i] = (outputs_[i] << 1) | output; // CHECK THIS!
     }
   }
 }
