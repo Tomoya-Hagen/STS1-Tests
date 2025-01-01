@@ -129,6 +129,7 @@ std::vector<uint8_t> ViterbiCodec::Encode(std::span<uint8_t> src) const
 
 void ViterbiCodec::InitializeOutputs()
 {
+  outputs_ = {0};
   for (int i = 0; i < outputs_.size(); i++)
   {
     for (int j = 0; j < num_parity_bits(); j++)
@@ -144,7 +145,7 @@ void ViterbiCodec::InitializeOutputs()
         polynomial >>= 1;
         input >>= 1;
       }
-      outputs_[i] += output ? 1 : 0;
+      outputs_[i] = (outputs_[i] << 1) | output;
     }
   }
 }
@@ -223,7 +224,7 @@ void ViterbiCodec::UpdatePathMetrics(const std::string &bits,
   trellis->push_back(new_trellis_column);
 }
 
-std::string ViterbiCodec::Decode(const std::string &bits) const
+std::string ViterbiCodec::DecodeToString(const std::string &bits) const
 {
   int puncture_index = 0;
   std::string reconstructed_bits;

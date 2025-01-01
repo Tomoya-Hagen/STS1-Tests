@@ -1,10 +1,12 @@
 #pragma once
 
-#include <vector>
-#include <cstdint>
-#include "../viterbi/viterbi.h"
-#include "../reed_solomon/include/rs.hpp"
 #include "../bit_scrambling/Cpp/bitsnarl.hpp"
+#include "../reed_solomon/include/rs.hpp"
+#include "../viterbi/viterbi.h"
+
+#include <cstdint>
+#include <span>
+#include <vector>
 
 namespace sts1cobcsw
 {

@@ -38,7 +38,7 @@ public:
 
   std::vector<uint8_t> Encode(std::span<uint8_t> src) const;
 
-  std::string Decode(const std::string &bits) const;
+  std::string DecodeToString(const std::string &bits) const;
 
   int constraint() const { return 7; }
 
