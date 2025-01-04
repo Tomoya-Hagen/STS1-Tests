@@ -64,14 +64,14 @@ struct is_array_of_uint8<std::array<std::uint8_t, N>> {
     enum { value = true };
 };
 
-void pseudo_hadamard(std::uint8_t& a, std::uint8_t& b){
+inline void pseudo_hadamard(std::uint8_t& a, std::uint8_t& b){
     std::uint8_t new_a = a + b;
     std::uint8_t new_b = a + 2*b;
     a = new_a;
     b = new_b;
 }
 
-void inv_pseudo_hadamard(std::uint8_t& a, std::uint8_t& b) {
+inline void inv_pseudo_hadamard(std::uint8_t& a, std::uint8_t& b) {
     std::uint8_t new_b = b - a;
     std::uint8_t new_a = 2*a - b;
     a = new_a;
@@ -82,7 +82,7 @@ template <
     typename T,
     typename std::enable_if<is_array_of_uint8<T>::value, std::nullptr_t>::type = nullptr
 >
-void scramble(T &bytes){
+void scramble(T &bytes){ // is this not "byte" scrambling?
     std::size_t N = bytes.size();
     std::size_t step = 1;
     do {
