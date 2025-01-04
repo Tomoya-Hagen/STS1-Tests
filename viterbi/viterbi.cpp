@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <climits>
 #include <iostream>
 #include <limits>
 #include <span>
@@ -16,34 +17,41 @@
 #include <vector>
 #include <cstdint>
 
-namespace {
+namespace
+{
 
-int HammingDistance(const std::string& x, const std::string& y) {
-  assert(x.size() == y.size());
-  int distance = 0;
-  for (int i = 0; i < x.size(); i++) {
-    distance += x[i] != y[i];
+  int HammingDistance(const std::string &x, const std::string &y)
+  {
+    assert(x.size() == y.size());
+    int distance = 0;
+    for (int i = 0; i < x.size(); i++)
+    {
+      distance += x[i] != y[i];
+    }
+    return distance;
   }
-  return distance;
-}
 
-}  // namespace
+} // namespace
 
-std::ostream& operator <<(std::ostream& os, const ViterbiCodec& codec) {
+std::ostream &operator<<(std::ostream &os, const ViterbiCodec &codec)
+{
   os << "ViterbiCodec(" << codec.constraint() << ", {";
-  const std::array<int, 2>& polynomials = codec.polynomials();
+  const std::array<int, 2> &polynomials = codec.polynomials();
   assert(!polynomials.empty());
   os << polynomials.front();
-  for (int i = 1; i < polynomials.size(); i++) {
+  for (int i = 1; i < polynomials.size(); i++)
+  {
     os << ", " << polynomials[i];
   }
   return os << "})";
 }
 
-int ReverseBits(int num_bits, int input) {
+int ReverseBits(int num_bits, int input)
+{
   assert(input < (1 << num_bits));
   int output = 0;
-  while (num_bits-- > 0) {
+  while (num_bits-- > 0)
+  {
     output = (output << 1) + (input & 1);
     input >>= 1;
   }
@@ -53,75 +61,78 @@ int ReverseBits(int num_bits, int input) {
 ViterbiCodec::ViterbiCodec()
 {
   assert(!polynomials_.empty());
-  for (int i = 0; i < polynomials_.size(); i++) {
+  for (int i = 0; i < polynomials_.size(); i++)
+  {
     assert(polynomials_[i] > 0);
     assert(polynomials_[i] < (1 << constraint_));
   }
   InitializeOutputs();
 }
 
-int ViterbiCodec::num_parity_bits() const {
+int ViterbiCodec::num_parity_bits() const
+{
   return polynomials_.size();
 }
 
-int ViterbiCodec::NextState(int current_state, int input) const {
+int ViterbiCodec::NextState(int current_state, int input) const
+{
   return (current_state >> 1) | (input << (constraint_ - 2));
 }
 
-std::uint8_t ViterbiCodec::Output(int current_state, int input) const {
+std::uint8_t ViterbiCodec::Output(int current_state, int input) const
+{
   return outputs_.at(current_state | (input << (constraint_ - 1)));
 }
 
-void ViterbiCodec::Encode(std::span<std::uint8_t> src, std::vector<std::uint8_t>& dst) const {
+void ViterbiCodec::Encode(std::span<std::uint8_t> src, std::vector<std::uint8_t> &dst) const
+{
   int state = 0;
 
-  for (int i = 0; i < src.size(); i++) {
-    for (int j = 7; j >= 0; j--) {
+  for (int i = 0; i < src.size(); i++)
+  {
+    for (int j = CHAR_BIT - 1; j >= 0; j--)
+    {
       auto bit = (src[i] >> j) & 1;
       assert(bit == 0 || bit == 1);
       dst.push_back(Output(state, bit));
       state = NextState(state, bit);
     }
   }
-  std::cout << "encoded first phase:  ";
-  for (int i = 0; i < dst.size(); i++) {
-    std::cout << std::format("{:02b}", dst[i]);
-  }
-  std::cout << std::endl;
 
   // Encode (constaint_ - 1) flushing bits.
-  for (int i = 0; i < constraint_ - 1; i++) {
+  for (int i = 0; i < constraint_ - 1; i++)
+  {
     dst.push_back(Output(state, 0));
     state = NextState(state, 0);
   }
 
-  std::cout << "encoded second phase: ";
-  for (int i = 0; i < dst.size(); i++) {
-    std::cout << std::format("{:02b}", dst[i]);
+  std::vector<std::uint8_t> punctured;
+
+  for (int i = 0; i < dst.size(); i++)
+  {
+    if (puncturing_pattern_[i % 4])
+    {
+      punctured.push_back(dst[i]);
+    }
   }
-  std::cout << std::endl;
 
-  // std::vector<std::uint8_t> punctured;
-
-  // for (int i = 0; i < dst.size(); i++) {
-  //   if (puncturing_pattern_[i % 4]) {
-  //     punctured.push_back(dst[i]);
-  //   }
-  // }
-
-  // dst = std::move(punctured);
+  dst = std::move(punctured);
 }
 
-void ViterbiCodec::InitializeOutputs() {
-  for (int i = 0; i < outputs_.size(); i++) {
+void ViterbiCodec::InitializeOutputs()
+{
+  for (int i = 0; i < outputs_.size(); i++)
+  {
     outputs_[i] = 0;
-    for (int j = 0; j < num_parity_bits(); j++) {
+    for (int j = 0; j < num_parity_bits(); j++)
+    {
       // Reverse polynomial bits to make the convolution code simpler.
       int polynomial = ReverseBits(constraint_, polynomials_[j]);
       // int polynomial = polynomials_[j];
       int input = i;
       int output = 0;
-      for (int k = 0; k < constraint_; k++) {
+      for (int k = 0; k < constraint_; k++)
+      {
         output ^= (input & 1) & (polynomial & 1);
         polynomial >>= 1;
         input >>= 1;
@@ -131,9 +142,10 @@ void ViterbiCodec::InitializeOutputs() {
   }
 }
 
-int ViterbiCodec::BranchMetric(const std::string& bits,
+int ViterbiCodec::BranchMetric(const std::string &bits,
                                int source_state,
-                               int target_state) const {
+                               int target_state) const
+{
   assert(bits.size() == num_parity_bits());
   assert((target_state & ((1 << (constraint_ - 2)) - 1)) == source_state >> 1);
   const auto output =
@@ -143,35 +155,43 @@ int ViterbiCodec::BranchMetric(const std::string& bits,
 }
 
 std::pair<int, int> ViterbiCodec::PathMetric(
-    const std::string& bits,
-    const std::vector<int>& prev_path_metrics,
-    int state) const {
+    const std::string &bits,
+    const std::vector<int> &prev_path_metrics,
+    int state) const
+{
   int s = (state & ((1 << (constraint_ - 2)) - 1)) << 1;
   int source_state1 = s | 0;
   int source_state2 = s | 1;
 
   int pm1 = prev_path_metrics[source_state1];
-  if (pm1 < std::numeric_limits<int>::max()) {
+  if (pm1 < std::numeric_limits<int>::max())
+  {
     pm1 += BranchMetric(bits, source_state1, state);
   }
   int pm2 = prev_path_metrics[source_state2];
-  if (pm2 < std::numeric_limits<int>::max()) {
+  if (pm2 < std::numeric_limits<int>::max())
+  {
     pm2 += BranchMetric(bits, source_state2, state);
   }
 
-  if (pm1 <= pm2) {
+  if (pm1 <= pm2)
+  {
     return std::make_pair(pm1, source_state1);
-  } else {
+  }
+  else
+  {
     return std::make_pair(pm2, source_state2);
   }
 }
 
-void ViterbiCodec::UpdatePathMetrics(const std::string& bits,
-                                     std::vector<int>* path_metrics,
-                                     Trellis* trellis) const {
+void ViterbiCodec::UpdatePathMetrics(const std::string &bits,
+                                     std::vector<int> *path_metrics,
+                                     Trellis *trellis) const
+{
   std::vector<int> new_path_metrics(path_metrics->size());
   std::vector<int> new_trellis_column(1 << (constraint_ - 1));
-  for (int i = 0; i < path_metrics->size(); i++) {
+  for (int i = 0; i < path_metrics->size(); i++)
+  {
     std::pair<int, int> p = PathMetric(bits, *path_metrics, i);
     new_path_metrics[i] = p.first;
     new_trellis_column[i] = p.second;
@@ -181,17 +201,20 @@ void ViterbiCodec::UpdatePathMetrics(const std::string& bits,
   trellis->push_back(new_trellis_column);
 }
 
-std::string ViterbiCodec::Decode(const std::string &bits) const {
+std::string ViterbiCodec::Decode(const std::string &bits) const
+{
   // Compute path metrics and generate trellis.
   Trellis trellis;
   std::vector<int> path_metrics(1 << (constraint_ - 1),
                                 std::numeric_limits<int>::max());
   path_metrics.front() = 0;
-  for (int i = 0; i < bits.size(); i += num_parity_bits()) {
+  for (int i = 0; i < bits.size(); i += num_parity_bits())
+  {
     std::string current_bits(bits, i, num_parity_bits());
     // If some bits are missing, fill with trailing zeros.
     // This is not ideal but it is the best we can do.
-    if (current_bits.size() < num_parity_bits()) {
+    if (current_bits.size() < num_parity_bits())
+    {
       current_bits.append(
           std::string(num_parity_bits() - current_bits.size(), '0'));
     }
@@ -202,7 +225,8 @@ std::string ViterbiCodec::Decode(const std::string &bits) const {
   std::string decoded;
   int state = std::min_element(path_metrics.begin(), path_metrics.end()) -
               path_metrics.begin();
-  for (int i = trellis.size() - 1; i >= 0; i--) {
+  for (int i = trellis.size() - 1; i >= 0; i--)
+  {
     decoded += state >> (constraint_ - 2) ? "1" : "0";
     state = trellis[i][state];
   }
@@ -211,4 +235,3 @@ std::string ViterbiCodec::Decode(const std::string &bits) const {
   // Remove (constraint_ - 1) flushing bits.
   return decoded.substr(0, decoded.size() - constraint_ + 1);
 }
-

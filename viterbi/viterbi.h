@@ -79,7 +79,7 @@ class ViterbiCodec {
                          Trellis* trellis) const;
 
   static constexpr int constraint_ = 7;
-  const std::array<int, 2> polynomials_ = {0b1111001, 0b1011011};
+  static constexpr std::array<int, 2> polynomials_ = {0b1111001, 0b1011011};
 
   // The output table.
   // The index is current input bit combined with previous inputs in the shift
@@ -89,7 +89,7 @@ class ViterbiCodec {
   // 6).
   std::array<std::uint8_t, 1 << constraint_> outputs_;
 
-  const std::array<bool, 4> puncturing_pattern_ = {1, 1, 1, 1};
+  static constexpr std::array<bool, 4> puncturing_pattern_ = {1, 1, 0, 1};
 };
 
 std::ostream& operator <<(std::ostream& os, const ViterbiCodec& codec);
