@@ -1,6 +1,6 @@
 #include "test.h"
 #include "encode_decode.h"
-#include "../cc-viterbi/viterbi.h"
+#include "../viterbi/viterbi.h"
 
 #include <cassert>
 #include <cstdint>
@@ -19,18 +19,19 @@ void test_encode_decode_short() {
         src.push_back(rand() % 255);
     }
 
-    std::vector<std::uint8_t> dst;
+    auto dst = std::vector<std::uint8_t>();
     sts1cobcsw::Encode(src, dst);
 
     auto encoded = std::string();
 
     for (auto x : dst) {
-        encoded += (x - '0');
+        encoded += (x == 0 ? '0' : '1');
     }
 
-    auto decoded = codec.DecodeToString(encoded);
+    std::cout << "encoded: " << encoded.size() << "\n";
 
-    std::vector<std::uint8_t> buffer;
+    auto decoded = codec.Decode(encoded);
+    auto buffer = std::vector<std::uint8_t>();
 
     for (char bit : decoded) {
         buffer.push_back(bit - '0');
@@ -38,7 +39,8 @@ void test_encode_decode_short() {
 
     auto destination = std::vector<std::uint8_t>();
     sts1cobcsw::Decode(buffer, destination);
-
+    std::cout << "src: " << src.size() << "\n";
+    std::cout << "destination: " << destination.size() << "\n";
     assert(src.size() == destination.size());
     for (int i = 0; i < src.size(); i++) {
         assert(src[i] == destination[i]);
@@ -62,7 +64,7 @@ void test_encode_decode_long() {
         encoded += (x - '0');
     }
 
-    auto decoded = codec.DecodeToString(encoded);
+    auto decoded = codec.Decode(encoded);
 
     std::vector<std::uint8_t> buffer;
 
@@ -107,7 +109,7 @@ void test_encode_decode_insert_error_success() {
             encoded[pos + i] = '0';
         }
     }
-    auto decoded = codec.DecodeToString(encoded);
+    auto decoded = codec.Decode(encoded);
 
     auto buffer = std::vector<std::uint8_t>();
 

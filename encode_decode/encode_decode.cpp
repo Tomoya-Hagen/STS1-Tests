@@ -26,7 +26,7 @@ namespace sts1cobcsw
         for (int i = 0; i < total_blocks; i++)
         {
             int start_idx = i * block_size;
-            int current_block_size = std::min(block_size, input_size - start_idx); // possibly an edge case handling for the last block
+            int current_block_size = std::min(block_size, input_size - start_idx);
             uint8_t block[block_size] = {0};
             memcpy(block, src.data() + start_idx, current_block_size);
             rs.Encode(block, encoded.data() + i * rs_length);

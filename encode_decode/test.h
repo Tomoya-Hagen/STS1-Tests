@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../cc-viterbi/viterbi.h"
+#include "../viterbi/viterbi.h"
 
 auto codec = ViterbiCodec();
 
