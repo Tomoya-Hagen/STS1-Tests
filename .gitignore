@@ -1,5 +1,6 @@
 .vscode/
 **/build/
+reed_solomon/
 *.m
 *.py
 *.o
