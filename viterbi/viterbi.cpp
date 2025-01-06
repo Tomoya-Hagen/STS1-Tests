@@ -36,7 +36,7 @@ namespace
 std::ostream &operator<<(std::ostream &os, const ViterbiCodec &codec)
 {
   os << "ViterbiCodec(" << codec.constraint() << ", {";
-  const std::array<int, 2> &polynomials = codec.polynomials();
+  const std::array<std::uint8_t, 2> &polynomials = codec.polynomials();
   assert(!polynomials.empty());
   os << polynomials.front();
   for (int i = 1; i < polynomials.size(); i++)
@@ -86,37 +86,78 @@ std::uint8_t ViterbiCodec::Output(int current_state, int input) const
 
 void ViterbiCodec::Encode(std::span<std::uint8_t> src, std::vector<std::uint8_t> &dst) const
 {
-  int state = 0;
+  auto state = 0;
+  auto bytes = 0;
+  auto i = 0;
 
-  for (int i = 0; i < src.size(); i++)
+  for (; i < src.size(); i++)
   {
-    for (int j = CHAR_BIT - 1; j >= 0; j--)
+    auto counter = 0;
+    for (int j = CHAR_BIT - 1; j >= 0; j = j - 2) // per iteration 12 bits.
     {
-      auto bit = (src[i] >> j) & 1;
-      assert(bit == 0 || bit == 1);
-      dst.push_back(Output(state, bit));
-      state = NextState(state, bit);
+      auto bit1 = (src[i] >> j) & 1;
+      auto bit2 = (src[i] >> (j - 1)) & 1;
+      assert(bit1 == 0 || bit1 == 1);
+      assert(bit2 == 0 || bit2 == 1);
+      auto output1 = Output(state, bit1);
+      state = NextState(state, bit1);
+      auto output2 = Output(state, bit2);
+      state = NextState(state, bit2);
+      // std::uint8_t output = (output1 << 1) | (output2 & 0b10);
+      std::uint8_t output = (output1 << 1) | (output2 & 1); // puncturing patter: 1101
+      assert(output >= 0 && output <= 0b111);
+      // std::cout << std::format("{:04b} ", output);
+      bytes = (bytes << 3) | output;
+    }
+    std::cout << std::endl;
+    std::cout << "bytes: " << std::format("{:024b}", bytes) << std::endl;
+    assert(bytes >= 0 && bytes <= 0xFFFFFF);
+    int mask = 0xFF0000;
+    if (i & 1) // when i is odd, the total bits are 24, thus 3 bytes.
+    {
+      for (int k = 0; k < 3; k++)
+      {
+        dst.push_back(bytes & mask);
+        std::cout << "pushed: " << std::endl; // NOT reached.
+        std::cout << std::format("{:08b} ", bytes & mask);
+        mask >>= 8;
+      }
     }
   }
 
+  std::uint16_t mask = 0xFF00; // bytes can have a maximum of 16 bits;
+  std::uint16_t counter = bytes;
+  if (i % 2 == 0)
+  {
+    while (counter && mask)
+    {
+      std::cout << "here: " << std::endl;
+      dst.push_back(bytes & mask);
+      mask >>= 8;
+      counter >>= 8;
+    }
+    assert(counter == 0);
+  }
+
+  auto bytes_for_flush = 0;
   // Encode (constaint_ - 1) flushing bits.
-  for (int i = 0; i < constraint_ - 1; i++)
+  for (int i = 0; i < constraint_ - 1; i = i + 2) // 9 more bits here.
   {
-    dst.push_back(Output(state, 0));
+    assert(constraint_ == 7);
+    auto output1 = Output(state, 0);
     state = NextState(state, 0);
-  }
-
-  std::vector<std::uint8_t> punctured;
-
-  for (int i = 0; i < dst.size(); i++)
-  {
-    if (puncturing_pattern_[i % 4])
-    {
-      punctured.push_back(dst[i]);
+    auto output2 = Output(state, 0);
+    state = NextState(state, 0);
+    std::uint8_t output = (output1 << 1) | (output2 & 1);
+    bytes_for_flush = (bytes_for_flush << 3) | output;
+    if (i == constraint_ - 3) {
+      std::cout << "bytes from flushing: " << std::format("{:024b}", bytes_for_flush) << std::endl;
+      int second_byte = bytes_for_flush & 1;
+      bytes_for_flush >>= 1;
+      dst.push_back(bytes_for_flush);
+      dst.push_back(second_byte); // adding one uint8_t = 1 or 0.
     }
   }
-
-  dst = std::move(punctured);
 }
 
 void ViterbiCodec::InitializeOutputs()
@@ -126,11 +167,9 @@ void ViterbiCodec::InitializeOutputs()
     outputs_[i] = 0;
     for (int j = 0; j < num_parity_bits(); j++)
     {
-      // Reverse polynomial bits to make the convolution code simpler.
-      int polynomial = ReverseBits(constraint_, polynomials_[j]);
-      // int polynomial = polynomials_[j];
-      int input = i;
-      int output = 0;
+      uint8_t polynomial = polynomials_[j];
+      uint8_t input = i;
+      uint8_t output = 0;
       for (int k = 0; k < constraint_; k++)
       {
         output ^= (input & 1) & (polynomial & 1);

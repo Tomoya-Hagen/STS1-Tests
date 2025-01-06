@@ -42,7 +42,7 @@ class ViterbiCodec {
 
   int constraint() const { return constraint_; }
 
-  const std::array<int, 2>& polynomials() const { return polynomials_; }
+  const std::array<std::uint8_t, 2>& polynomials() const { return polynomials_; }
 
  private:
   // Suppose
@@ -79,7 +79,7 @@ class ViterbiCodec {
                          Trellis* trellis) const;
 
   static constexpr int constraint_ = 7;
-  static constexpr std::array<int, 2> polynomials_ = {0b1111001, 0b1011011};
+  static constexpr std::array<uint8_t, 2> polynomials_ = {0b1111001, 0b1011011};
 
   // The output table.
   // The index is current input bit combined with previous inputs in the shift

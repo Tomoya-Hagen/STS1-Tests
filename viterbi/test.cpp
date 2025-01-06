@@ -11,7 +11,7 @@
 
 int main(int argc, char** argv) {
   auto codec = ViterbiCodec();
-  auto message = std::vector<std::uint8_t>{129};
+  auto message = std::vector<std::uint8_t>{0b10000001};
   std::cout << "input:   " << std::format("{:08b}", message[0]) << "\n";
   auto bits = std::array<std::uint8_t, 48>{};
 
@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
   auto encoded_string = std::string();
   std::cout << "encoded length: " << encoded.size() << "\n";
   for (auto x : encoded) {
-    encoded_string += std::format("{:02b}", x);
+    encoded_string += std::format("{:08b}", x);
   }
   std::cout << encoded_string << "\n";
 
