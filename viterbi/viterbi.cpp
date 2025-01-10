@@ -103,43 +103,36 @@ void ViterbiCodec::Encode(std::span<std::uint8_t> src, std::vector<std::uint8_t>
       state = NextState(state, bit1);
       auto output2 = Output(state, bit2);
       state = NextState(state, bit2);
-      // std::uint8_t output = (output1 << 1) | (output2 & 0b10);
-      std::uint8_t output = (output1 << 1) | (output2 & 1); // puncturing patter: 1101
+      std::uint8_t output = (output1 << 1) | (output2 & 1);
       assert(output >= 0 && output <= 0b111);
       // std::cout << std::format("{:04b} ", output);
       bytes = (bytes << 3) | output;
     }
-    std::cout << std::endl;
-    std::cout << "bytes: " << std::format("{:024b}", bytes) << std::endl;
-    assert(bytes >= 0 && bytes <= 0xFFFFFF);
-    int mask = 0xFF0000;
+    std::cout << "\n";
     if (i & 1) // when i is odd, the total bits are 24, thus 3 bytes.
     {
+      assert(bytes >= 0 && bytes <= 0xFFFFFF);
+      int mask = 0xFF0000;
+      int shift = 16;
+      std::cout << "bytes: " << std::format("{:024b}", bytes) << std::endl;
       for (int k = 0; k < 3; k++)
       {
-        dst.push_back(bytes & mask);
-        std::cout << "pushed: " << std::endl; // NOT reached.
-        std::cout << std::format("{:08b} ", bytes & mask);
+        dst.push_back((bytes & mask) >> shift);
+        std::cout << std::format("{:08b} ", (bytes & mask) >> shift) << "\n";
         mask >>= 8;
+        shift -= 8;
       }
+      bytes = 0;
     }
   }
 
-  std::uint16_t mask = 0xFF00; // bytes can have a maximum of 16 bits;
-  std::uint16_t counter = bytes;
-  if (i % 2 == 0)
-  {
-    while (counter && mask)
-    {
-      std::cout << "here: " << std::endl;
-      dst.push_back(bytes & mask);
-      mask >>= 8;
-      counter >>= 8;
-    }
-    assert(counter == 0);
+  if (i & 1) { // think about how to format the last 4 out of remaining 12 bits correctly. TODO
+    assert(bytes >= 0 && bytes <= 0xFFF);
+    dst.push_back((bytes & 0xFF0) >> 8);
+    dst.push_back(bytes & 0xF);
   }
 
-  auto bytes_for_flush = 0;
+  auto bits_for_flush = 0;
   // Encode (constaint_ - 1) flushing bits.
   for (int i = 0; i < constraint_ - 1; i = i + 2) // 9 more bits here.
   {
@@ -149,12 +142,12 @@ void ViterbiCodec::Encode(std::span<std::uint8_t> src, std::vector<std::uint8_t>
     auto output2 = Output(state, 0);
     state = NextState(state, 0);
     std::uint8_t output = (output1 << 1) | (output2 & 1);
-    bytes_for_flush = (bytes_for_flush << 3) | output;
-    if (i == constraint_ - 3) {
-      std::cout << "bytes from flushing: " << std::format("{:024b}", bytes_for_flush) << std::endl;
-      int second_byte = bytes_for_flush & 1;
-      bytes_for_flush >>= 1;
-      dst.push_back(bytes_for_flush);
+    bits_for_flush = (bits_for_flush << 3) | output;
+    if (i == constraint_ - 3) { // hard coded.
+      std::cout << "bytes from flushing: " << std::format("{:09b}", bits_for_flush) << std::endl;
+      int second_byte = bits_for_flush & 1;
+      bits_for_flush >>= 1;
+      dst.push_back(bits_for_flush);
       dst.push_back(second_byte); // adding one uint8_t = 1 or 0.
     }
   }
@@ -176,7 +169,7 @@ void ViterbiCodec::InitializeOutputs()
         polynomial >>= 1;
         input >>= 1;
       }
-      outputs_[i] = (outputs_[i] << 1) | output; // CHECK THIS!
+      outputs_[i] = (outputs_[i] << 1) | output;
     }
   }
 }
