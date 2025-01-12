@@ -20,5 +20,5 @@ file(GLOB CPP_FILES *.cpp)
 add_executable(${PROJECT_NAME} ${CPP_FILES})
 
 # steps to build:
-# mkdir build && cd build && cmake .. && make
+# mkdir build && cd build && cmake .. && make (in reed_solomon dir.))
 # ./tests/RStest

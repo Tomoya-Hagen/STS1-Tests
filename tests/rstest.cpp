@@ -432,7 +432,7 @@ bool RStest::test_encode_decode()
     std::cout << "Corrupted: " << encoded << std::endl;
     std::cout << "Repaired:  " << repaired << std::endl;
 
-    return (memcmp(message, repaired, msglen) == 0);
+    return (memcmp(message, repaired, msglen) == 0) && rs.error_correction_successful();
 }
 
 bool RStest::test_encode_char_200()
@@ -500,7 +500,7 @@ bool RStest::test_encode_char_200()
     }
     std::cout << std::endl;
 
-    return success;
+    return success && rs.error_correction_successful();
 }
 
 bool RStest::test_encode_char_250()
@@ -569,7 +569,7 @@ bool RStest::test_encode_char_250()
         }
     }
 
-    return success;
+    return success && rs.error_correction_successful();
 }
 
 bool RStest::test_float()
@@ -650,7 +650,7 @@ bool RStest::test_float()
     }
     std::cout << std::endl;
 
-    return success;
+    return success && rs.error_correction_successful();
 }
 
 bool RStest::test_custom_data_type()
@@ -715,7 +715,7 @@ bool RStest::test_custom_data_type()
         }
     }
 
-    return success;
+    return success && rs.error_correction_successful();
 }
 
 bool RStest::test_single_error()

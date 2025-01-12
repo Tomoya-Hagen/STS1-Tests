@@ -244,6 +244,10 @@ public:
          return DecodeBlock(src, ecc_ptr, dst, erase_pos, erase_count);
      }
 
+     bool error_correction_successful() {
+        return errors_corrected;
+     }
+
 #ifndef RS_DEBUG
 private:
 #endif
@@ -276,6 +280,7 @@ private:
     // Pointer for polynomials memory on stack
     uint8_t* memory;
     Poly polynoms[MSG_CNT + POLY_CNT];
+    bool errors_corrected = false;
 
     void GeneratorPoly() {
         Poly *gen = polynoms + ID_GENERATOR;
@@ -420,6 +425,16 @@ private:
         }
 
         gf::poly_add(msg_in, E, corrected);
+
+        CalcSyndromes(corrected);
+        bool success = true;
+        for (int i = 0; i < synd->length; i++) {
+            if (synd->at(i) != 0) {
+                success = false;
+                break;
+            }
+        }
+        errors_corrected = success;
     }
 
     bool FindErrorLocator(const Poly *synd, Poly *erase_loc = NULL, size_t erase_count = 0) {
@@ -495,7 +510,7 @@ private:
 
         for(uint8_t i = 0; i < msg_in_size; i++) {
             if(gf::poly_eval(error_loc, gf::pow(2, i)) == 0) {
-                err->Append(msg_in_size - 1 - i);
+                err->Append(msg_in_size - 1 - i); // adds the positions of the errors.
             }
         }
 
