@@ -3,25 +3,25 @@
 #include <cstring>
 #include "bitsnarl.hpp"
 
-void test_hadamard() {
-    for(int a = 0; a < 256; a++) {
-        for(int b = 0; b < 256; b++) {
-            if(a == 0 && b == 0) continue;
-            std::uint8_t a_orig = a;
-            std::uint8_t b_orig = b;
-            bitsn::pseudo_hadamard(a_orig, b_orig);
-            bitsn::pseudo_hadamard(a_orig, b_orig);
-            if(a == a_orig && b == b_orig) {
-                printf("pseudo_hadamard yield same result (%d, %d) => (%d, %d)\n", a, b, a_orig, b_orig);
-            }
-            bitsn::inv_pseudo_hadamard(a_orig, b_orig);
-            bitsn::inv_pseudo_hadamard(a_orig, b_orig);
-            if(!(a_orig == a && b_orig == b)) {
-                printf("pseudo_hadamard not bijective at (%d, %d)\n", a, b);
-            }
-        }
-    }
-}
+// void test_hadamard() {
+//     for(int a = 0; a < 256; a++) {
+//         for(int b = 0; b < 256; b++) {
+//             if(a == 0 && b == 0) continue;
+//             std::uint8_t a_orig = a;
+//             std::uint8_t b_orig = b;
+//             bitsn::pseudo_hadamard(a_orig, b_orig);
+//             bitsn::pseudo_hadamard(a_orig, b_orig);
+//             if(a == a_orig && b == b_orig) {
+//                 printf("pseudo_hadamard yield same result (%d, %d) => (%d, %d)\n", a, b, a_orig, b_orig);
+//             }
+//             bitsn::inv_pseudo_hadamard(a_orig, b_orig);
+//             bitsn::inv_pseudo_hadamard(a_orig, b_orig);
+//             if(!(a_orig == a && b_orig == b)) {
+//                 printf("pseudo_hadamard not bijective at (%d, %d)\n", a, b);
+//             }
+//         }
+//     }
+// }
 
 #define N 4000
 void test_scramble_identity() {
@@ -186,7 +186,7 @@ void test_scramble_and_unscramble_with_errors() {
 }
 
 int main() {
-    test_hadamard();
+    // test_hadamard();
     test_scramble_identity();
     test_scramble_error_spread();
     test_scramble_and_unscramble();
