@@ -144,11 +144,11 @@ void ViterbiCodec::Encode(std::span<std::uint8_t> src, std::vector<std::uint8_t>
     std::uint8_t output = (output1 << 1) | (output2 & 1);
     bits_for_flush = (bits_for_flush << 3) | output;
     if (i == constraint_ - 3) { // hard coded.
-      std::cout << "bytes from flushing: " << std::format("{:09b}", bits_for_flush) << std::endl;
-      int second_byte = bits_for_flush & 1;
+      std::cout << "bytes from flushing: " << std::format("{:09b}", bits_for_flush) << "\n";
+      std::uint8_t second_byte = bits_for_flush & 1;
       bits_for_flush >>= 1;
       dst.push_back(bits_for_flush);
-      dst.push_back(second_byte); // adding one uint8_t = 1 or 0.
+      dst.push_back(second_byte); // adding 1 xor 0.
     }
   }
 }
