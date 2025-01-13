@@ -188,16 +188,15 @@ public:
         CalcSyndromes(msg_in);
 
         // Checking for errors
-        bool has_errors = false;
         for(uint8_t i = 0; i < synd->length; i++) {
             if(synd->at(i) != 0) {
-                has_errors = true;
+                errors_existent = true;
                 break;
             }
         }
 
         // Going to exit if no errors
-        if(!has_errors) goto return_corrected_msg;
+        if(!errors_existent) goto return_corrected_msg;
 
         CalcForneySyndromes(synd, epos, src_len);
         FindErrorLocator(forney, NULL, epos->length);
@@ -248,6 +247,10 @@ public:
         return errors_corrected;
      }
 
+     bool had_errors() {
+        return errors_existent;
+     }
+
 #ifndef RS_DEBUG
 private:
 #endif
@@ -281,6 +284,7 @@ private:
     uint8_t* memory;
     Poly polynoms[MSG_CNT + POLY_CNT];
     bool errors_corrected = false;
+    bool errors_existent = false;
 
     void GeneratorPoly() {
         Poly *gen = polynoms + ID_GENERATOR;
