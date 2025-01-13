@@ -1,5 +1,6 @@
 .vscode/
 **/build/
+bit_scrambling/
 reed_solomon/
 *.m
 *.py
