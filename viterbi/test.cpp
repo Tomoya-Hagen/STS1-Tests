@@ -11,7 +11,7 @@
 
 int main(int argc, char** argv) {
   auto codec = ViterbiCodec();
-  auto message = std::vector<std::uint8_t>{0b11111111};
+  auto message = std::vector<std::uint8_t>{0b11111111, 1, 0b1111, 0b11111111}; // encoded: 111101010111000010101 (for 0xFF), 111101010001111011011 (for 0b11111101)
   for (std::uint8_t x : message) {
     std::cout << std::format("{:08b}", x) << " ";
   }
@@ -21,11 +21,22 @@ int main(int argc, char** argv) {
   codec.Encode(message, encoded);
   auto encoded_string = std::string();
   auto counter = 0;
-  for (auto x : encoded) {
+  for (uint8_t i = 0; i < encoded.size(); i++) {
     auto buffer = std::string();
-    while (x) {
-      buffer += std::to_string(x & 1);
-      x >>= 1;
+    int x = 0;
+    uint8_t limit;
+    if (i == encoded.size() - 1) {
+      if (i % 2 == 0) {
+        limit = 5;
+      } else {
+        limit = 1;
+      }
+    } else {
+      limit = 8;
+    }
+    while (x < limit) {
+      buffer += std::to_string((encoded[i] >> x) & 1);
+      x++;
     }
     std::reverse(buffer.begin(), buffer.end());
     encoded_string += buffer;
