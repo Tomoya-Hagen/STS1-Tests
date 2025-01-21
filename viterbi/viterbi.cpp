@@ -84,6 +84,17 @@ std::uint8_t ViterbiCodec::Output(int current_state, int input) const
   return outputs_.at(current_state | (input << (constraint_ - 1)));
 }
 
+std::uint8_t ViterbiCodec::ProcessTwoBits(int &state, std::uint8_t bit1, std::uint8_t bit2) const
+{
+  auto output1 = Output(state, bit1);
+  state = NextState(state, bit1);
+  auto output2 = Output(state, bit2);
+  state = NextState(state, bit2);
+  auto output = (output1 << 1) | (output2 & 1);
+  assert(output >= 0 && output <= 0b111);
+  return output;
+}
+
 void ViterbiCodec::Encode(std::span<std::uint8_t> src, std::vector<std::uint8_t> &dst) const
 {
   auto state = 0;
@@ -93,19 +104,13 @@ void ViterbiCodec::Encode(std::span<std::uint8_t> src, std::vector<std::uint8_t>
   for (; i < src.size(); i++)
   {
     auto counter = 0;
-    for (int j = CHAR_BIT - 1; j > 0; j = j - 2) // per iteration 12 bits.
+    for (int j = CHAR_BIT - 1; j > 0; j -= 2) // per iteration 12 bits.
     {
       auto bit1 = (src[i] >> j) & 1;
       auto bit2 = (src[i] >> (j - 1)) & 1;
       assert(bit1 == 0 || bit1 == 1);
       assert(bit2 == 0 || bit2 == 1);
-      auto output1 = Output(state, bit1);
-      state = NextState(state, bit1);
-      auto output2 = Output(state, bit2);
-      state = NextState(state, bit2);
-      std::uint8_t output = (output1 << 1) | (output2 & 1);
-      assert(output >= 0 && output <= 0b111);
-      bytes = (bytes << 3) | output;
+      bytes = (bytes << 3) | ProcessTwoBits(state, bit1, bit2);
     }
 
     if (i % 2 == 1) // when i is odd, the total bits are 24, thus 3 bytes.
@@ -123,25 +128,21 @@ void ViterbiCodec::Encode(std::span<std::uint8_t> src, std::vector<std::uint8_t>
     }
   }
 
-  for (int j = constraint_ - 1; j > 0; j = j - 2) {
+  for (int j = constraint_ - 1; j > 0; j -= 2)
+  {
     assert(constraint_ == 7);
-    auto bit1 = 0;
-    auto bit2 = 0;
-    auto output1 = Output(state, bit1);
-    state = NextState(state, bit1);
-    auto output2 = Output(state, bit2);
-    state = NextState(state, bit2);
-    std::uint8_t output = (output1 << 1) | (output2 & 1);
-    assert(output >= 0 && output <= 0b111);
-    bytes = (bytes << 3) | output;
+    bytes = (bytes << 3) | ProcessTwoBits(state, 0, 0);
   }
 
-  if (i % 2 == 1) { // 21 bits to process e.g.: 111101010001111011011
+  if (i % 2 == 1)
+  { // 21 bits to process e.g.: 111101010001111011011
     assert(bytes >= 0 && bytes <= 0x1FFFFF);
     dst.push_back((bytes >> 13) & 0xFF); // 11110101
-    dst.push_back((bytes >> 5) & 0xFF); //  00011110
-    dst.push_back(bytes & 0x1F);  // 11011
-  } else { // 9 bits to process
+    dst.push_back((bytes >> 5) & 0xFF);  // 00011110
+    dst.push_back(bytes & 0x1F);         // 11011
+  }
+  else
+  { // 9 bits to process
     assert(bytes >= 0 && bytes <= 0x1FF);
     dst.push_back((bytes >> 1) & 0xFF);
     dst.push_back(bytes & 1);

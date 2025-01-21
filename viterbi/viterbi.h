@@ -62,6 +62,8 @@ class ViterbiCodec {
 
   std::uint8_t Output(int current_state, int input) const;
 
+  std::uint8_t ProcessTwoBits(int &state, std::uint8_t bit1, std::uint8_t bit2) const;
+
   int BranchMetric(const std::string& bits,
                    int source_state,
                    int target_state) const;
