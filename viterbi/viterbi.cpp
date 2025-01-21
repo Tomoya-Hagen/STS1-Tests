@@ -135,8 +135,6 @@ void ViterbiCodec::Encode(std::span<std::uint8_t> src, std::vector<std::uint8_t>
     assert(output >= 0 && output <= 0b111);
     bytes = (bytes << 3) | output;
   }
-  std::cout << "bits: " << std::to_string(bytes) << "\n";
-  // bis hier mal richtig
 
   if (i % 2 == 1) { // 21 bits to process e.g.: 111101010001111011011
     assert(bytes >= 0 && bytes <= 0x1FFFFF);
