@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstddef>
 #include <cstring>
+#include <format>
 #include "bitsnarl.hpp"
 
 // void test_hadamard() {
@@ -185,12 +186,21 @@ void test_scramble_and_unscramble_with_errors() {
     std::cout << std::endl;
 }
 
+void test_galois_field() {
+    auto galois_field = bitsn::calculate_galois_table(0b01011111); // 0b10101001 for TM
+    std::cout << "size: " << galois_field.size() << "\n";
+    for (std::uint8_t byte : galois_field) {
+        std::cout << std::format("{:02X} ", byte);
+    }
+}
+
 int main() {
     // test_hadamard();
-    test_scramble_identity();
-    test_scramble_error_spread();
-    test_scramble_and_unscramble();
-    test_scramble_and_unscramble2();
-    test_scramble_and_unscramble_with_errors();
-    test_scramble_and_unscramble_string();
+    test_galois_field();
+    // test_scramble_identity();
+    // test_scramble_error_spread();
+    // test_scramble_and_unscramble();
+    // test_scramble_and_unscramble2();
+    // test_scramble_and_unscramble_with_errors();
+    // test_scramble_and_unscramble_string();
 }
