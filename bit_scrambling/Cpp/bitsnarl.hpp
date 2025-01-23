@@ -96,10 +96,13 @@ namespace bitsn
         {
             if (coefficients[i] == 1)
             {
-                if (!first_bit_set) {
+                if (!first_bit_set)
+                {
                     result = (state >> (shifter - i)) & 1;
                     first_bit_set = true;
-                } else {
+                }
+                else
+                {
                     result ^= (state >> (shifter - i)) & 1;
                 }
             }
@@ -109,7 +112,6 @@ namespace bitsn
 
     auto calculate_galois_table(std::uint8_t polynomial, int degree) -> std::vector<std::uint8_t>
     {
-
         auto x = std::pow(2, degree);
         auto table = std::vector<std::uint8_t>(x);
         std::uint8_t state = 0xFF; // initialy all input bits are 1
@@ -128,7 +130,8 @@ namespace bitsn
         for (int i = 1; i < x; i++)
         {
             std::uint8_t byte = 0;
-            for (int j = 0; j < degree; j++) {
+            for (int j = 0; j < degree; j++)
+            {
                 auto feedback_bit = calculate_feedback(state, coefficients);
                 state = (state >> 1) | (feedback_bit << (degree - 1));
                 assert(state >= 0 && state <= 0xFF);
