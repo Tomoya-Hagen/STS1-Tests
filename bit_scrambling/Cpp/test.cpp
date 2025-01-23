@@ -33,8 +33,9 @@ void test_scramble_identity()
         bytes_orig[i] = rand() % 255;
     }
     std::memcpy(bytes_copy.begin(), bytes_orig.begin(), N);
-    bitsn::scramble(bytes_orig);
-    bitsn::un_scramble(bytes_orig);
+    bitsn::unscramble_telecommand(bytes_orig);
+    // bitsn::scramble_telemetry(bytes_orig);
+    bitsn::unscramble_telecommand(bytes_orig);
     for (int i = 0; i < N; i++)
     {
         if (bytes_orig[i] != bytes_copy[i])
@@ -55,13 +56,14 @@ void test_scramble_error_spread()
         bytes_orig[i] = rand() % 255;
     }
     memcpy(bytes_scrambled.begin(), bytes_orig.begin(), N);
-    bitsn::scramble(bytes_scrambled);
+    bitsn::unscramble_telecommand(bytes_scrambled);
     for (int p = 0; p < N; p++)
     { // error at p
         std::array<uint8_t, N> bytes_dirty;
         memcpy(bytes_dirty.begin(), bytes_scrambled.begin(), N);
         bytes_dirty[p] += 7; // inject some error
-        bitsn::un_scramble(bytes_dirty);
+        // bitsn::scramble_telemetry(bytes_dirty);
+        bitsn::unscramble_telecommand(bytes_dirty);
         int same_count = 0;
         for (int i = 0; i < N; i++)
         {
@@ -89,7 +91,7 @@ void test_scramble_and_unscramble()
     }
     std::cout << std::endl;
 
-    bitsn::scramble(data);
+    bitsn::unscramble_telecommand(data);
     std::cout << "Scrambled" << std::endl;
     for (auto &e : data)
     {
@@ -97,7 +99,8 @@ void test_scramble_and_unscramble()
     }
     std::cout << std::endl;
 
-    bitsn::un_scramble(data);
+    // bitsn::scramble_telemetry(data);
+    bitsn::unscramble_telecommand(data);
     std::cout << "Un-Scrambled" << std::endl;
     for (auto &e : data)
     {
@@ -117,7 +120,7 @@ void test_scramble_and_unscramble2()
     }
     std::cout << std::endl;
 
-    bitsn::scramble(data);
+    bitsn::unscramble_telecommand(data);
     std::cout << "Scrambled" << std::endl;
     for (auto &e : data)
     {
@@ -125,7 +128,8 @@ void test_scramble_and_unscramble2()
     }
     std::cout << std::endl;
 
-    bitsn::un_scramble(data);
+    // bitsn::scramble_telemetry(data);
+    bitsn::unscramble_telecommand(data);
     std::cout << "Un-Scrambled" << std::endl;
     for (auto &e : data)
     {
@@ -153,7 +157,7 @@ void test_scramble_and_unscramble_string()
     }
     std::cout << std::endl;
 
-    bitsn::scramble(bytes);
+    bitsn::unscramble_telecommand(bytes);
 
     std::cout << "Scrambled bytes: ";
     for (int i = 0; i < 16; i++)
@@ -165,7 +169,8 @@ void test_scramble_and_unscramble_string()
     std::string scrambled_data(bytes.begin(), bytes.end());
     std::cout << "Scrambled text: " << scrambled_data << std::endl;
 
-    bitsn::un_scramble(bytes);
+    // bitsn::scramble_telemetry(bytes);
+    bitsn::unscramble_telecommand(bytes);
 
     std::string unscrambled_data(bytes.begin(), bytes.end());
 
@@ -183,7 +188,7 @@ void test_scramble_and_unscramble_with_errors()
     }
     std::cout << std::endl;
 
-    bitsn::scramble(data);
+    bitsn::scramble_telemetry(data);
     std::cout << "Scrambled" << std::endl;
     for (auto &e : data)
     {
@@ -191,7 +196,7 @@ void test_scramble_and_unscramble_with_errors()
     }
     std::cout << std::endl;
 
-    bitsn::un_scramble(data);
+    bitsn::scramble_telemetry(data);
     std::cout << "Un-Scrambled" << std::endl;
     for (auto &e : data)
     {
@@ -199,11 +204,11 @@ void test_scramble_and_unscramble_with_errors()
     }
     std::cout << std::endl;
 
-    bitsn::scramble(data);
+    bitsn::scramble_telemetry(data);
     data[0] += 1;
     data[5] += 1;
 
-    bitsn::un_scramble(data);
+    bitsn::scramble_telemetry(data);
     std::cout << "Un-Scrambled with errors" << std::endl;
     for (auto &e : data)
     {
@@ -214,11 +219,17 @@ void test_scramble_and_unscramble_with_errors()
 
 void test_galois_field()
 {
-    auto galois_field = bitsn::calculate_galois_table(0b01011111, 8); // 0b10101001 for TM
+    auto galois_field = bitsn::calculate_galois_table(0b01011111, 8); // 0b10101001 for TM // 0b01011111 for TC
     std::cout << "size: " << galois_field.size() << "\n";
-    for (std::uint8_t byte : galois_field)
+    for (int i = 0; i < galois_field.size(); i++)
     {
-        std::cout << std::format("{:02X} ", byte);
+        std::cout << "0x" << std::format("{:02x}", galois_field[i]);
+        if (i != galois_field.size() - 1) {
+            std::cout << ", ";
+        }
+        if (i % 15 == 0 && i != 0 && i == galois_field.size() - 1) {
+            std::cout << "\n";
+        }
     }
 }
 
@@ -226,10 +237,11 @@ int main()
 {
     // test_hadamard();
     test_galois_field();
-    // test_scramble_identity();
-    // test_scramble_error_spread();
-    // test_scramble_and_unscramble();
-    // test_scramble_and_unscramble2();
+    test_scramble_identity();
+    test_scramble_error_spread();
+    test_scramble_and_unscramble();
+    test_scramble_and_unscramble2();
     // test_scramble_and_unscramble_with_errors();
-    // test_scramble_and_unscramble_string();
+    test_scramble_and_unscramble_string();
+
 }
