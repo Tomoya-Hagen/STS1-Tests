@@ -90,10 +90,9 @@ namespace bitsn
     {
         assert(coefficients.size() == 8);
         assert(std::find(coefficients.begin(), coefficients.end(), 1) != coefficients.end());
-        std::uint8_t shifter = coefficients.size() - 1;
-        std::uint8_t result;
+        auto shifter = coefficients.size() - 1;
+        auto result = 0;
         auto first_bit_set = false;
-        shifter = coefficients.size() - 1;
 
         for (int i = 0; i < coefficients.size(); i++)
         {
@@ -113,16 +112,16 @@ namespace bitsn
         return result;
     }
 
-    auto calculate_galois_table(std::uint8_t polynomial, int degree) -> std::vector<std::uint8_t>
+    auto calculate_galois_table(int polynomial, int degree) -> std::vector<std::uint8_t>
     {
         auto x = std::pow(2, degree);
         auto table = std::vector<std::uint8_t>(x);
-        std::uint8_t state = 0xFF; // initialy all input bits are 1
+        auto state = 0xFF; // initialy all input bits are 1
         table[0] = state;
         auto coefficients = std::vector<std::uint8_t>(degree);
-        std::uint8_t extractor = std::pow(2, degree - 1);
+        std::uint8_t extractor = std::pow(2, degree - 1); // auto not possible because of std::pow
         assert(0b10000000);
-        std::uint8_t shifter = degree - 1;
+        auto shifter = degree - 1;
 
         for (int i = 0; i < degree; i++)
         {
