@@ -187,7 +187,7 @@ void test_scramble_and_unscramble_with_errors() {
 }
 
 void test_galois_field() {
-    auto galois_field = bitsn::calculate_galois_table(0b01011111); // 0b10101001 for TM
+    auto galois_field = bitsn::calculate_galois_table(0b01011111, 8); // 0b10101001 for TM
     std::cout << "size: " << galois_field.size() << "\n";
     for (std::uint8_t byte : galois_field) {
         std::cout << std::format("{:02X} ", byte);

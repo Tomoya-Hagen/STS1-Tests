@@ -83,62 +83,62 @@ namespace bitsn
         scramble(bytes);
     }
 
-    auto calculate_feedback(std::uint8_t state, std::array<uint8_t, 8> coefficients) -> std::uint8_t
+    auto calculate_feedback(std::uint8_t state, std::vector<uint8_t> coefficients) -> std::uint8_t
     {
+        assert(coefficients.size() == 8);
         assert(std::find(coefficients.begin(), coefficients.end(), 1) != coefficients.end());
-        std::uint8_t shifter = 7;
-        std::uint8_t result = 0;
-        auto start = 0;
-        for (int i = 0; i < coefficients.size(); i++) { // calculate the first relevant bit in the state, as setting result to a random value will cause problems.
-            if (coefficients[i] == 1) {
-                result = (state >> (shifter - i)) & 1;
-                start = i + 1;
-                break;
-            }
-        }
-        shifter = 7;
-        for (int i = start; i < coefficients.size(); i++)
+        std::uint8_t shifter = coefficients.size() - 1;
+        std::uint8_t result;
+        auto first_bit_set = false;
+        shifter = coefficients.size() - 1;
+
+        for (int i = 0; i < coefficients.size(); i++)
         {
             if (coefficients[i] == 1)
             {
-                result ^= (state >> (shifter - i)) & 1;
+                if (!first_bit_set) {
+                    result = (state >> (shifter - i)) & 1;
+                    first_bit_set = true;
+                } else {
+                    result ^= (state >> (shifter - i)) & 1;
+                }
             }
         }
         return result;
     }
 
-    auto calculate_galois_table(std::uint8_t polynom) -> std::array<std::uint8_t, 255>
+    auto calculate_galois_table(std::uint8_t polynomial, int degree) -> std::vector<std::uint8_t>
     {
-        auto table = std::array<std::uint8_t, 255>();
+
+        auto x = std::pow(2, degree);
+        auto table = std::vector<std::uint8_t>(x);
         std::uint8_t state = 0xFF; // initialy all input bits are 1
         table[0] = state;
+        auto coefficients = std::vector<std::uint8_t>(degree);
+        std::uint8_t extractor = std::pow(2, degree - 1);
+        assert(0b10000000);
+        std::uint8_t shifter = degree - 1;
 
-        auto coefficients = std::array<std::uint8_t, 8>();
-        std::uint8_t extractor = 0b10000000;
-        std::uint8_t shifter = 7;
-
-        for (int i = 0; i < coefficients.size(); i++)
+        for (int i = 0; i < degree; i++)
         {
-            coefficients[i] = (polynom & extractor) >> shifter;
+            coefficients[i] = (polynomial & extractor) >> shifter;
             extractor >>= 1;
             shifter--;
         }
-        for (int i = 1; i < 256; i++)
+        for (int i = 1; i < x; i++)
         {
             std::uint8_t byte = 0;
-            for (int j = 0; j < 8; j++) {
+            for (int j = 0; j < degree; j++) {
                 auto feedback_bit = calculate_feedback(state, coefficients);
-                state = (state >> 1) | (feedback_bit << 7);
+                state = (state >> 1) | (feedback_bit << (degree - 1));
                 assert(state >= 0 && state <= 0xFF);
                 byte = (byte << 1) | feedback_bit;
             }
             assert(byte >= 0 && byte <= 0xFF);
-            if (i == 255) {
-                break;
-            }
             table[i] = byte;
         }
-        assert(state == 0xFF); // verify periodicity
+        assert((state == 0xFF) && (table[0] == table[table.size() - 1])); // verify periodicity
+        table.pop_back();
         return table;
     }
 
