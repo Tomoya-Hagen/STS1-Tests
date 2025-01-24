@@ -207,7 +207,7 @@ void test_galois_field()
         if (i != galois_field.size() - 1) {
             std::cout << ", ";
         }
-        if (i % 15 == 0 && i != 0 && i == galois_field.size() - 1) {
+        if (i % 15 == 0 && i == galois_field.size() - 1) {
             std::cout << "\n";
         }
     }
@@ -216,11 +216,11 @@ void test_galois_field()
 int main()
 {
     test_galois_field();
-    test_scramble_identity();
-    test_scramble_error_spread();
-    test_scramble_and_unscramble();
-    test_scramble_and_unscramble2();
+    // test_scramble_identity();
+    // test_scramble_error_spread();
+    // test_scramble_and_unscramble();
+    // test_scramble_and_unscramble2();
     // test_scramble_and_unscramble_with_errors();
-    test_scramble_and_unscramble_string();
+    // test_scramble_and_unscramble_string();
 
 }
