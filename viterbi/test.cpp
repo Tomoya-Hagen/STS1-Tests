@@ -23,27 +23,12 @@ int main(int argc, char **argv)
   auto encoded = std::vector<std::uint8_t>();
   codec.Encode(message, encoded);
   auto encoded_string = std::string();
-  for (uint8_t i = 0; i < encoded.size(); i++)
+  for (auto i = 0; i < encoded.size(); i++)
   {
     auto buffer = std::string();
-    int x = 0;
-    uint8_t limit;
+    auto x = 0;
+    auto limit = 8;
     size_t size = message.size();
-    if (i == encoded.size() - 1)
-    {
-      if (size % 2 == 1)
-      {
-        limit = 5;
-      }
-      else
-      {
-        limit = 1;
-      }
-    }
-    else
-    {
-      limit = 8;
-    }
     while (x < limit)
     {
       buffer += std::to_string((encoded[i] >> x) & 1);

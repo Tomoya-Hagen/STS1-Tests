@@ -139,13 +139,13 @@ void ViterbiCodec::Encode(std::span<std::uint8_t> src, std::vector<std::uint8_t>
     assert(bytes >= 0 && bytes <= 0x1FFFFF);
     dst.push_back((bytes >> 13) & 0xFF); // 11110101
     dst.push_back((bytes >> 5) & 0xFF);  // 00011110
-    dst.push_back(bytes & 0x1F);         // 11011
+    dst.push_back((bytes & 0x1F) << 3);         // 11011 -> 11011000
   }
   else
   { // 9 bits to process
     assert(bytes >= 0 && bytes <= 0x1FF);
     dst.push_back((bytes >> 1) & 0xFF);
-    dst.push_back(bytes & 1);
+    dst.push_back((bytes & 1) << 7); // 1 -> 10000000
   }
 }
 
