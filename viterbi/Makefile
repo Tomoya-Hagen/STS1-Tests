@@ -38,7 +38,7 @@ viterbi_test: viterbi_test.o viterbi.o
 my_test.o: test.cpp viterbi.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
-my_test: test.o viterbi.o
+my_test: test.o viterbi.o # run "make my_test" in "viterbi"-directory and then "./my_test"
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@
 
 .PHONY: all clean test
