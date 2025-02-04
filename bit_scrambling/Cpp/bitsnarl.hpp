@@ -84,7 +84,7 @@ namespace bitsn
         };
     };
 
-    auto calculate_feedback(std::uint8_t state, std::vector<uint8_t> coefficients) -> std::uint8_t
+    inline auto calculate_feedback(std::uint8_t state, std::vector<uint8_t> coefficients) -> std::uint8_t
     {
         assert(coefficients.size() == 8);
         assert(std::find(coefficients.begin(), coefficients.end(), 1) != coefficients.end());
@@ -110,7 +110,7 @@ namespace bitsn
         return result;
     }
 
-    auto calculate_galois_table(int polynomial, int degree) -> std::vector<std::uint8_t>
+    inline auto calculate_galois_table(int polynomial, int degree) -> std::vector<std::uint8_t>
     {
         auto x = std::pow(2, degree);
         auto table = std::vector<std::uint8_t>(x);
