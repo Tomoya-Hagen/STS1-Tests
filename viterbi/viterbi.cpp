@@ -229,23 +229,44 @@ void ViterbiCodec::UpdatePathMetrics(const std::string &bits,
   trellis->push_back(new_trellis_column);
 }
 
-std::string ViterbiCodec::Decode(const std::string &bits) const
+std::string ViterbiCodec::DecodeToString(const std::string &bits) const
 {
+  int puncture_index = 0;
+  std::string reconstructed_bits;
+  int pattern[] = {0, 1, 0};
+  int pattern_index = 0;
+
+  for (int i = 0; i < bits.size(); i++)
+  {
+    if (puncturing_pattern_[puncture_index % 4])
+    {
+      reconstructed_bits += bits[i]; // Use the bit from the input
+    }
+    else
+    {
+      reconstructed_bits += pattern[pattern_index++ % 3];
+      i--;
+    }
+    puncture_index++;
+  }
   // Compute path metrics and generate trellis.
   Trellis trellis;
-  std::vector<int> path_metrics(1 << (constraint_ - 1),
-                                std::numeric_limits<int>::max());
+
+  std::vector<int> path_metrics; // path_matrics[i] represents the cost to reach the state i, thus the length is the number of possible states.
+  path_metrics.resize(64);
+  std::fill(path_metrics.begin(), path_metrics.end(), std::numeric_limits<int>::max());
   path_metrics.front() = 0;
-  for (int i = 0; i < bits.size(); i += num_parity_bits())
+
+  for (int i = 0; i < reconstructed_bits.size(); i += num_parity_bits())
   {
-    std::string current_bits(bits, i, num_parity_bits());
+    std::string current_bits(reconstructed_bits, i, num_parity_bits());
     // If some bits are missing, fill with trailing zeros.
     // This is not ideal but it is the best we can do.
     if (current_bits.size() < num_parity_bits())
     {
-      current_bits.append(
-          std::string(num_parity_bits() - current_bits.size(), '0'));
+      current_bits.append(std::string(num_parity_bits() - current_bits.size(), '0'));
     }
+
     UpdatePathMetrics(current_bits, &path_metrics, &trellis);
   }
 
@@ -253,13 +274,13 @@ std::string ViterbiCodec::Decode(const std::string &bits) const
   std::string decoded;
   int state = std::min_element(path_metrics.begin(), path_metrics.end()) -
               path_metrics.begin();
+  // std::cout << "trellis size: " << trellis.size() << std::endl;
   for (int i = trellis.size() - 1; i >= 0; i--)
   {
     decoded += state >> (constraint_ - 2) ? "1" : "0";
     state = trellis[i][state];
   }
   std::reverse(decoded.begin(), decoded.end());
-
   // Remove (constraint_ - 1) flushing bits.
   return decoded.substr(0, decoded.size() - constraint_ + 1);
-}
+  }
