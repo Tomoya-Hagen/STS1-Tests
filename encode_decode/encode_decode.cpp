@@ -3,6 +3,7 @@
 #include "../reed_solomon/include/rs.hpp"
 #include "../bit_scrambling/Cpp/bitsnarl.hpp"
 
+#include <algorithm>
 #include <cstdint>
 #include <iostream>
 #include <span>
@@ -36,9 +37,26 @@ namespace sts1cobcsw
         bitsn::scramble_telemetry(encoded);
         std::cout << "code: after scrambling: " << encoded.size() << "\n";
 
+        AppendPreambleAndSyncMarker(encoded);
+
         auto codec = ViterbiCodec();
         codec.Encode(encoded, dst);
         std::cout << "dst: " << dst.size() << "\n";
+    }
+
+    void AppendPreambleAndSyncMarker(std::vector<std::uint8_t> &encoded)
+    {
+        auto preamble_sync_marker_length = 8;
+        encoded.resize(encoded.size() + preamble_sync_marker_length); // 4 Bytes-Preamble and 4 Bytes of Sync Marker
+        std::rotate(encoded.rbegin(), encoded.rbegin() + preamble_sync_marker_length, encoded.rend()); // right-shifts 8 entries forward
+        auto sync_marker = std::array<uint16_t, 4>{0x3C, 0x67, 0x49, 0x52}; // double check
+        for (int i = 0; i < preamble_sync_marker_length; i++) {
+            if (i < 4) {
+                encoded[i] = 0x33; // the preamble
+            } else {
+                encoded[i] = sync_marker[i - 4];
+            }
+        }
     }
 
     void Decode(std::span<std::uint8_t> src, std::vector<std::uint8_t> &dst)

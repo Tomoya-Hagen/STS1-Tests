@@ -11,5 +11,6 @@
 namespace sts1cobcsw
 {
     void Encode(std::span<std::uint8_t> src, std::vector<std::uint8_t> &dst);
+    void AppendPreambleAndSyncMarker(std::vector<std::uint8_t> &encoded);
     void Decode(std::span<std::uint8_t> src, std::vector<std::uint8_t> &dst);
 }

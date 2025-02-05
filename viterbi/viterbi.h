@@ -91,7 +91,7 @@ class ViterbiCodec {
   // 6).
   std::array<std::uint8_t, 1 << constraint_> outputs_;
 
-  static constexpr std::array<bool, 4> puncturing_pattern_ = {1, 1, 0, 1};
+  static constexpr std::array<bool, 4> puncturing_pattern_ = {1, 1, 0, 1}; // TODO: check what pattern is used by Ground Stations
 };
 
 std::ostream& operator <<(std::ostream& os, const ViterbiCodec& codec);
