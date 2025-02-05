@@ -41,10 +41,9 @@ namespace sts1cobcsw
         std::cout << "dst: " << dst.size() << "\n";
     }
 
-    void Decode(std::span<std::uint8_t> src, std::vector<std::uint8_t> &dst) // src.size() % 255 == 0 ?
+    void Decode(std::span<std::uint8_t> src, std::vector<std::uint8_t> &dst)
     {
-        // convolutional decoding is executed by the ground station.
-        assert(!src.empty());
+        assert(!src.empty() && src.size() == 255);
         auto buffer = std::vector<std::uint8_t>(src.begin(), src.end());
         bitsn::unscramble_telecommand(buffer);
 
