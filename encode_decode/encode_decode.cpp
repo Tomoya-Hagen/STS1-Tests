@@ -26,9 +26,9 @@ namespace sts1cobcsw
         for (int i = 0; i < total_blocks; i++)
         {
             int start_idx = i * block_size;
-            int current_block_size = std::min(block_size, input_size - start_idx);
             uint8_t block[block_size] = {0};
-            memcpy(block, src.data() + start_idx, current_block_size);
+            // memcpy(block, src.data() + start_idx, block_size);
+            std::copy(src.data() + start_idx, src.data() + start_idx + block_size, block + start_idx);
             rs.Encode(block, encoded.data() + i * rs_length);
         }
 
@@ -41,25 +41,26 @@ namespace sts1cobcsw
         std::cout << "dst: " << dst.size() << "\n";
     }
 
-    void Decode(std::span<std::uint8_t> src, std::vector<std::uint8_t> &dst) // src.size() == 255 * x, x element Z?
+    void Decode(std::span<std::uint8_t> src, std::vector<std::uint8_t> &dst) // src.size() % 255 == 0 ?
     {
         // convolutional decoding is executed by the ground station.
         assert(!src.empty());
         auto buffer = std::vector<std::uint8_t>(src.begin(), src.end());
         bitsn::unscramble_telecommand(buffer);
 
+        const int rs_length = block_size + parity_symbols;
         const int input_size = buffer.size();
-        // assert(input_size % block_size == 0);
-        int total_blocks = (input_size + block_size - 1) / block_size;
+        // assert(input_size % rs_length == 0);
+        int total_blocks = input_size / rs_length;
         dst.resize(total_blocks * block_size);
         for (int i = 0; i < total_blocks; i++)
         {
-            const uint8_t *current_block = buffer.data() + i * (block_size + parity_symbols);
+            const uint8_t *current_block = buffer.data() + i * rs_length;
             uint8_t decoded_block[block_size] = {0};
             rs.Decode(current_block, decoded_block);
             int start_idx = i * block_size;
-            // int current_block_size = std::min(block_size, static_cast<int>(dst.size()) - start_idx); // unnecessary, if the block_size is ensured to be 223 symbols long
-            memcpy(dst.data() + start_idx, decoded_block, block_size);
+            // memcpy(dst.data() + start_idx, decoded_block, block_size);
+            std::copy(decoded_block, decoded_block + block_size, dst.data() + start_idx);
         }
     }
 }
