@@ -49,7 +49,7 @@ namespace sts1cobcsw
         auto preamble_sync_marker_length = 8;
         encoded.resize(encoded.size() + preamble_sync_marker_length); // 4 Bytes-Preamble and 4 Bytes of Sync Marker
         std::rotate(encoded.rbegin(), encoded.rbegin() + preamble_sync_marker_length, encoded.rend()); // right-shifts 8 entries forward
-        auto sync_marker = std::array<uint16_t, 4>{0x3C, 0x67, 0x49, 0x52}; // double check
+        auto sync_marker = std::array<uint8_t, 4>{0b00011010, 0b11001111, 0b11111100, 0b00011101};
         for (int i = 0; i < preamble_sync_marker_length; i++) {
             if (i < 4) {
                 encoded[i] = 0x33; // the preamble
