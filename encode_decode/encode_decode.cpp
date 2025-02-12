@@ -64,8 +64,7 @@ namespace sts1cobcsw
         {
             int start_idx = i * block_size;
             uint8_t block[block_size] = {0};
-            // memcpy(block, src.data() + start_idx, block_size);
-            std::copy(src.data() + start_idx, src.data() + start_idx + block_size, block + start_idx);
+            std::copy(src.data() + start_idx, src.data() + start_idx + block_size, block);
             // here dual to alpha 223 -> 223;  block[i] = dual_to_alpha[block[i]]
             rs.Encode(block, encoded.data() + i * rs_length);
             // here alpha to dual 255 -> 255
@@ -114,7 +113,6 @@ namespace sts1cobcsw
             uint8_t decoded_block[block_size] = {0};
             rs.Decode(current_block, decoded_block);
             int start_idx = i * block_size;
-            // memcpy(dst.data() + start_idx, decoded_block, block_size);
             std::copy(decoded_block, decoded_block + block_size, dst.data() + start_idx);
         }
     }
