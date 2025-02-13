@@ -11,7 +11,7 @@
 namespace sts1cobcsw
 {
     void Encode(std::span<std::uint8_t> src, std::vector<std::uint8_t> &dst);
-    void ConvertBases(std::vector<std::uint8_t> &src, bool dual_to_basis, size_t size);
+    void ConvertBases(uint8_t *data, bool dual_to_basis, size_t size);
     void AppendPreambleAndSyncMarker(std::vector<std::uint8_t> &encoded);
     void Decode(std::span<std::uint8_t> src, std::vector<std::uint8_t> &dst);
 }
