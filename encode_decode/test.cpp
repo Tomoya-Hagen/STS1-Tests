@@ -4,8 +4,11 @@
 
 #include <cassert>
 #include <cstdint>
+#include <cstdlib>
+#include <ctime>
 #include <format>
 #include <iostream>
+#include <numeric>
 #include <span>
 #include <stdlib.h>
 #include <string>
@@ -110,6 +113,7 @@ void test_encode_decode_short()
 
 void test_encode_decode_long()
 {
+    srand(static_cast<unsigned>(time(0)));
     auto src = std::vector<std::uint8_t>();
 
     for (int i = 0; i < 1000; i++)
@@ -151,6 +155,7 @@ void test_encode_decode_insert_error_success()
 {
     auto src = std::vector<std::uint8_t>();
 
+    srand(static_cast<unsigned>(time(0)));
     for (int i = 0; i < 500; i++)
     {
         src.push_back(rand() % 255);
@@ -211,7 +216,7 @@ void test_preamble_and_sync_marker()
     std::fill(buffer.begin(), buffer.end(), 1);
     sts1cobcsw::AppendPreambleAndSyncMarker(buffer);
     assert(buffer.size() == 263);
-    auto sync_marker = std::array<uint16_t, 4>{0x3C, 0x67, 0x49, 0x52};
+    auto sync_marker = std::array<uint16_t, 4>{0b00011010, 0b11001111, 0b11111100, 0b00011101};
     for (int i = 0; i < buffer.size(); i++)
     {
         auto x = buffer[i];
@@ -219,7 +224,8 @@ void test_preamble_and_sync_marker()
         {
             assert(x == 0x33);
         }
-        if (i >= 4 && i < 8) {
+        if (i >= 4 && i < 8)
+        {
             assert(x == sync_marker[i - 4]);
         }
         std::cout << std::to_string(x) << " ";
@@ -228,12 +234,54 @@ void test_preamble_and_sync_marker()
     std::cout << "Test 'test_preamble_and_sync_marker' passed" << "\n";
 }
 
+void test_basis_conversion()
+{
+    srand(static_cast<unsigned>(time(0)));
+    auto random_factor = (rand() % 10) + 1;
+    assert(random_factor >= 0 && random_factor <= 10);
+    auto size = random_factor * 255;
+    std::cout << "data length: " << std::to_string(size) << " (factor: " << std::to_string(random_factor) << ")\n";
+    auto buffer = std::vector<uint8_t>();
+    buffer.resize(size);
+    for (int i = 0; i < size; i++)
+    {
+        buffer[i] = rand() % 255;
+    }
+    // std::iota(buffer.begin(), buffer.begin() + 255, 0); // the symbols periodically repeat themselves in interval 0-255.
+
+    auto lab_rat_buffer = std::vector<uint8_t>();
+    lab_rat_buffer.resize(size);
+    std::copy(buffer.begin(), buffer.end(), lab_rat_buffer.begin());
+    sts1cobcsw::ConvertBases(lab_rat_buffer.data(), true, lab_rat_buffer.size());
+
+    auto counter = 0;
+    for (uint8_t c : lab_rat_buffer)
+    {
+        if (counter % 15 == 0)
+        {
+            std::cout << "\n";
+        }
+        counter++;
+        std::cout << std::to_string(c) << " ";
+    }
+
+    sts1cobcsw::ConvertBases(lab_rat_buffer.data(), false, lab_rat_buffer.size());
+
+    for (int i = 0; i < buffer.size(); i++)
+    {
+        assert(buffer[i] == lab_rat_buffer[i]);
+    }
+
+    std::cout << "\nbasis conversion test successful!" << "\n";
+}
+
 int main()
 {
     // test_encode_decode_short();
     // test_encode_decode_long();
     // test_encode_decode_insert_error_success();
     // test_encode_decode_insert_error_fail();
-    test_preamble_and_sync_marker();
+    // test_preamble_and_sync_marker();
+    test_basis_conversion();
     return 0;
 }
