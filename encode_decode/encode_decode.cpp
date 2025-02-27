@@ -1,6 +1,6 @@
 #include "encode_decode.h"
 #include "../viterbi/viterbi.h"
-#include "../reed_solomon/include/rs.hpp"
+#include "../reed_solomon/rs.hpp"
 #include "../bit_scrambling/Cpp/bitsnarl.hpp"
 
 #include <algorithm>

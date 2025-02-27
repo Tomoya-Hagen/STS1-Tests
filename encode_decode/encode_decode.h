@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../bit_scrambling/Cpp/bitsnarl.hpp"
-#include "../reed_solomon/include/rs.hpp"
+#include "../reed_solomon/rs.hpp"
 #include "../viterbi/viterbi.h"
 
 #include <cstdint>
