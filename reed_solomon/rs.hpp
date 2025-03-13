@@ -99,7 +99,6 @@
              generator_cached = true;
          }
  
-         uint8_t padding_size = msg_length - sizeof(src_ptr);
          // Copying input message to internal polynomial
          msg_in->Set(src_ptr, msg_length);
          msg_out->Set(src_ptr, msg_length);
@@ -295,9 +294,9 @@
          Poly *temp = polynoms + ID_TPOLY2;
          mulp->length = 2;
  
-         for(int8_t i = 0; i < ecc_length; i++){
+         for(int8_t i = 128 - (ecc_length / 2); i <= 128 + (ecc_length / 2); i++){
              mulp->at(0) = 1;
-             mulp->at(1) = gf::pow(2, i);
+             mulp->at(1) = gf::pow(2, i * 11);
  
              gf::poly_mul(gen, mulp, temp);
  
